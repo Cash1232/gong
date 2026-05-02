@@ -1,4 +1,3 @@
---!strict
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,23 +8,21 @@ local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
  
--- Check for executor's request function
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
  
 local AstralLib = {}
  
--- // THEME CONFIGURATION
 local Theme = {
     Background = Color3.fromRGB(12, 12, 14),
     Card = Color3.fromRGB(18, 18, 22),
     IconBg = Color3.fromRGB(25, 25, 30),
     Border = Color3.fromRGB(35, 35, 40),
-    Accent = Color3.fromRGB(0, 122, 255), -- Blue
+    Accent = Color3.fromRGB(0, 122, 255),
     Purple = Color3.fromRGB(190, 0, 255),
     TextPrimary = Color3.fromRGB(255, 255, 255),
     TextSec = Color3.fromRGB(160, 160, 165),
     Knob = Color3.fromRGB(255, 255, 255),
-    Success = Color3.fromRGB(50, 255, 100), -- Green for ticks
+    Success = Color3.fromRGB(50, 255, 100),
     Danger = Color3.fromRGB(255, 50, 50)
 }
  
@@ -33,15 +30,14 @@ if CoreGui:FindFirstChild("Astral_UI_V10") then
     CoreGui.Astral_UI_V10:Destroy()
 end
  
--- // INTERNAL HELPERS
-local function Corner(radius: number, parent: Instance)
+local function Corner(radius, parent)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, radius)
     c.Parent = parent
     return c
 end
  
-local function Stroke(color: Color3, thickness: number, parent: Instance)
+local function Stroke(color, thickness, parent)
     local s = Instance.new("UIStroke")
     s.Color = color
     s.Thickness = thickness
@@ -50,8 +46,7 @@ local function Stroke(color: Color3, thickness: number, parent: Instance)
     return s
 end
  
--- // DRAGGING HANDLER
-local function MakeDraggable(UIElement: GuiObject)
+local function MakeDraggable(UIElement)
     local dragging = false
     local dragInput
     local dragStart
@@ -102,7 +97,6 @@ function AstralLib:CreateWindow(titleText, versionText)
     Corner(10, MainFrame)
     Stroke(Theme.Border, 1, MainFrame)
  
-    -- // INDEPENDENT EXTERNAL BUTTONS
     local MinimizeBtn = Instance.new("ImageButton")
     MinimizeBtn.Name = "MinimizeButton"
     MinimizeBtn.Size = UDim2.new(0, 75, 0, 75)
@@ -135,7 +129,6 @@ function AstralLib:CreateWindow(titleText, versionText)
     local StopScale = Instance.new("UIScale", StopTweenBtn)
     MakeDraggable(StopTweenBtn)
  
-    -- // CLICK ANIMATIONS & LOGIC
     local clickStartPos = Vector2.zero
  
     MinimizeBtn.InputBegan:Connect(function(input)
@@ -177,8 +170,8 @@ function AstralLib:CreateWindow(titleText, versionText)
     ResizeHandle.Parent = MainFrame
  
     local resizing = false
-    local resizeStartPos: Vector3
-    local resizeStartSize: Vector2
+    local resizeStartPos
+    local resizeStartSize
  
     ResizeHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -378,7 +371,11 @@ function AstralLib:CreateWindow(titleText, versionText)
         
         task.spawn(function()
             while task.wait(0.1) do
-                Sec.Visible = Window.SidebarExpanded
+                if Sec and Sec.Parent then
+                    Sec.Visible = Window.SidebarExpanded
+                else
+                    break
+                end
             end
         end)
     end
@@ -479,9 +476,13 @@ function AstralLib:CreateWindow(titleText, versionText)
         local RList = Instance.new("UIListLayout", RightColumn)
         RList.Padding = UDim.new(0, 15); RList.SortOrder = Enum.SortOrder.LayoutOrder
  
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 30)
-        end)
+        local function UpdateCanvas()
+            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 50)
+        end
+ 
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+        LList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+        RList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
  
         table.insert(Window.AllTabs, {Btn = TabBtn, Bg = TabBg, Text = TabText, Content = TabContent, Gradient = TabGradient, Stroke = TabStroke})
  
@@ -502,6 +503,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             TweenService:Create(TabText, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
             local activeIcon = TabBg:FindFirstChild("TabIcon")
             if activeIcon then TweenService:Create(activeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end
+            UpdateCanvas()
         end
  
         TabBtn.MouseButton1Click:Connect(SelectTab)
@@ -530,7 +532,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             SecLine.Parent = Sec
         end
  
-        function Elements:AddParagraph(title: string, content: string)
+        function Elements:AddParagraph(title, content)
             elementOrder = elementOrder + 1
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, -5, 0, 0)
@@ -566,7 +568,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             c.Parent = frame
         end
  
-        function Elements:AddPreview(title: string, content: string)
+        function Elements:AddPreview(title, content)
             elementOrder = elementOrder + 1
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, -5, 0, 140)
@@ -614,7 +616,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             c.Parent = frame
         end
  
-        function Elements:AddStatusCard(title: string, status: string, imageId: string, statusColor: Color3, side: string?)
+        function Elements:AddStatusCard(title, status, imageId, statusColor, side)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
@@ -687,7 +689,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             statusText.Parent = statusContainer
         end
  
-        function Elements:AddLabel(title: string, content: string, iconId: string, side: string?)
+        function Elements:AddLabel(title, content, iconId, side)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
@@ -831,13 +833,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             Corner(6, btn)
             task.spawn(function()
                 if httpRequest then
-                    local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
-                    if res.StatusCode == 200 then
-                        local data = HttpService:JSONDecode(res.Body)
-                        onlineCount.Text = (data.approximate_presence_count or 0) .. " Online"
-                        memberCount.Text = (data.approximate_member_count or 0) .. " Members"
-                        if data.guild and data.guild.description and data.guild.description ~= "" then desc.Text = data.guild.description end
-                    end
+                    pcall(function()
+                        local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
+                        if res.StatusCode == 200 then
+                            local data = HttpService:JSONDecode(res.Body)
+                            onlineCount.Text = (data.approximate_presence_count or 0) .. " Online"
+                            memberCount.Text = (data.approximate_member_count or 0) .. " Members"
+                            if data.guild and data.guild.description and data.guild.description ~= "" then desc.Text = data.guild.description end
+                        end
+                    end)
                 end
             end)
             btn.MouseButton1Click:Connect(function()
@@ -851,7 +855,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        function Elements:AddToggle(title: string, iconId: string, side: string?, callback: (boolean) -> ())
+        function Elements:AddToggle(title, iconId, side, callback)
             local isToggled = false
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
@@ -907,8 +911,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED TICK COMPONENT (WITH ICON SUPPORT)
-        function Elements:AddTick(title: string, iconId: string, default: boolean, side: string?, callback: (boolean) -> ())
+        function Elements:AddTick(title, iconId, default, side, callback)
             local isToggled = default or false
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 65)
@@ -972,8 +975,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED COMBIN TICK COMPONENT (WITH ICON SUPPORT)
-        function Elements:AddCombinTick(title: string, ticks: {{Text: string, Icon: string, Default: boolean, Callback: (boolean) -> ()}}, side: string?)
+        function Elements:AddCombinTick(title, ticks, side)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
             frame.AutomaticSize = Enum.AutomaticSize.Y
@@ -1063,8 +1065,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
  
-        -- // UPDATED KEYBIND COMPONENT (WITH ICON SUPPORT)
-        function Elements:AddKeybind(title: string, iconId: string, default: Enum.KeyCode?, side: string?, callback: (Enum.KeyCode) -> ())
+        function Elements:AddKeybind(title, iconId, default, side, callback)
             local currentKey = default or Enum.KeyCode.LeftControl
             local listening = false
             
@@ -1131,7 +1132,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        function Elements:AddButton(title: string, sub: string, iconId: string, side: string?, callback: () -> ())
+        function Elements:AddButton(title, sub, iconId, side, callback)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
@@ -1185,7 +1186,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.MouseButton1Click:Connect(callback)
         end
  
-        function Elements:AddInputButton(title: string, iconId: string, buttonText: string, side: string?, callback: (string) -> ())
+        function Elements:AddInputButton(title, iconId, buttonText, side, callback)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 100)
             frame.BackgroundColor3 = Theme.Card
@@ -1274,8 +1275,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED COMBIN BUTTON (WITH ICON SUPPORT)
-        function Elements:AddCombinButton(title: string, buttons: {{Text: string, Icon: string?, Callback: () -> ()}}, side: string?)
+        function Elements:AddCombinButton(title, buttons, side)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
             frame.AutomaticSize = Enum.AutomaticSize.Y
@@ -1345,7 +1345,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
  
-        function Elements:AddTextBox(title: string, iconId: string, side: string?, callback: (string) -> ())
+        function Elements:AddTextBox(title, iconId, side, callback)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
@@ -1399,7 +1399,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             box.FocusLost:Connect(function(enter) if enter then callback(box.Text) end end)
         end
  
-        function Elements:AddSlider(title: string, iconId: string, min: number, max: number, default: number, side: string?, callback: (number) -> ())
+        function Elements:AddSlider(title, iconId, min, max, default, side, callback)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
@@ -1514,7 +1514,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        function Elements:AddSelector(title: string, iconId: string, options: {string}, config: {MaxSelect: number, Default: {string}?}, side: string?, callback: ({string}) -> ())
+        function Elements:AddSelector(title, iconId, options, config, side, callback)
             local maxSelect = config.MaxSelect or 1
             local selected = config.Default or {}
             local frame = Instance.new("Frame")
@@ -1669,7 +1669,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                         end)
                     end
                 end
-                task.defer(function() List.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y) end)
+                task.defer(function() List.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10) end)
             end
             SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateList)
             local function TogglePanel(state)
@@ -1685,7 +1685,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
         end
  
-        function Elements:AddColorPicker(title: string, sub: string, default: Color3, side: string?, callback: (Color3) -> ())
+        function Elements:AddColorPicker(title, sub, default, side, callback)
             local h, s, v = Color3.toHSV(default)
             local originalColor = default
             local currentColor = default
@@ -1857,7 +1857,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ApplyBtn.ZIndex = 502
             ApplyBtn.Parent = Panel
             Corner(6, ApplyBtn)
-            local function UpdateColor(skipHex: boolean?)
+            local function UpdateColor(skipHex)
                 currentColor = Color3.fromHSV(h, s, v)
                 NewColorPreview.BackgroundColor3 = currentColor
                 SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
