@@ -1,3 +1,4 @@
+--!strict
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -83,29 +84,6 @@ local function MakeDraggable(UIElement: GuiObject)
         end
     end)
 end
- 
--- // DEBUGGER LOGIC VARIABLES
-local StartTime = os.time()
-local RawServerTime = 0
-local DebuggerVisible = true
-local ShowTimeData = true
-local ShowFpsPing = true
-local ShowFruit = true
- 
--- Server Time Event Listener
-task.spawn(function()
-    local fxEvent = ReplicatedStorage:WaitForChild("Remotes", 5)
-    if fxEvent then
-        fxEvent = fxEvent:WaitForChild("FX", 5)
-        if fxEvent and fxEvent:IsA("RemoteEvent") then
-            fxEvent.OnClientEvent:Connect(function(serverTime)
-                if typeof(serverTime) == "number" then
-                    RawServerTime = serverTime
-                end
-            end)
-        end
-    end
-end)
  
 function AstralLib:CreateWindow(titleText, versionText)
     local ScreenGui = Instance.new("ScreenGui")
@@ -385,141 +363,6 @@ function AstralLib:CreateWindow(titleText, versionText)
         end
     end)
  
-    function Window:AddStatus()
-        -- // DEBUGGER UI (ASTRAL STATUS)
-        local DebuggerFrame = Instance.new("Frame")
-        DebuggerFrame.Name = "AstralStatus"
-        DebuggerFrame.Size = UDim2.new(0, 300, 0, 200)
-        DebuggerFrame.Position = UDim2.new(0, 20, 0, 20)
-        DebuggerFrame.BackgroundColor3 = Theme.Background
-        DebuggerFrame.BorderSizePixel = 0
-        DebuggerFrame.ClipsDescendants = true
-        DebuggerFrame.Visible = true
-        DebuggerFrame.Parent = ScreenGui
-        Corner(10, DebuggerFrame)
-        Stroke(Theme.Border, 1, DebuggerFrame)
-        MakeDraggable(DebuggerFrame)
-    
-        local DebugHeader = Instance.new("Frame")
-        DebugHeader.Size = UDim2.new(1, 0, 0, 35)
-        DebugHeader.BackgroundColor3 = Theme.Card
-        DebugHeader.Parent = DebuggerFrame
-        Corner(10, DebugHeader)
-        
-        local DebugTitle = Instance.new("TextLabel")
-        DebugTitle.Size = UDim2.new(1, -20, 1, 0)
-        DebugTitle.Position = UDim2.new(0, 15, 0, 0)
-        DebugTitle.BackgroundTransparency = 1
-        DebugTitle.RichText = true
-        DebugTitle.Text = "<b>ASTRAL</b> STATUS"
-        DebugTitle.TextColor3 = Theme.TextPrimary
-        DebugTitle.Font = Enum.Font.GothamBold
-        DebugTitle.TextSize = 13
-        DebugTitle.TextXAlignment = Enum.TextXAlignment.Left
-        DebugTitle.Parent = DebugHeader
-    
-        local DebugContent = Instance.new("Frame")
-        DebugContent.Size = UDim2.new(1, 0, 1, -35)
-        DebugContent.Position = UDim2.new(0, 0, 0, 35)
-        DebugContent.BackgroundTransparency = 1
-        DebugContent.Parent = DebuggerFrame
-    
-        local DebugList = Instance.new("UIListLayout")
-        DebugList.Padding = UDim.new(0, 8)
-        DebugList.SortOrder = Enum.SortOrder.LayoutOrder
-        DebugList.Parent = DebugContent
-        Instance.new("UIPadding", DebugContent).PaddingTop = UDim.new(0, 12)
-        Instance.new("UIPadding", DebugContent).PaddingLeft = UDim.new(0, 15)
-        Instance.new("UIPadding", DebugContent).PaddingBottom = UDim.new(0, 12)
-    
-        local function CreateDebugRow(text, layoutOrder)
-            local Row = Instance.new("Frame")
-            Row.Size = UDim2.new(1, -15, 0, 20)
-            Row.BackgroundTransparency = 1
-            Row.LayoutOrder = layoutOrder
-            Row.Parent = DebugContent
-    
-            local Icon = Instance.new("ImageLabel")
-            Icon.Size = UDim2.new(0, 16, 0, 16)
-            Icon.Position = UDim2.new(0, 0, 0.5, -8)
-            Icon.BackgroundTransparency = 1
-            Icon.Image = "rbxassetid://11326670020"
-            Icon.ImageColor3 = Theme.Accent
-            Icon.Parent = Row
-    
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, -25, 1, 0)
-            Label.Position = UDim2.new(0, 25, 0, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = text
-            Label.TextColor3 = Theme.TextSec
-            Label.Font = Enum.Font.GothamMedium
-            Label.TextSize = 12
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = Row
-    
-            return Row, Label, Icon
-        end
-    
-        local FpsRow, FpsLabel = CreateDebugRow("Fps: 0 Ping: 0ms", 1)
-        local TimePlayedRow, TimePlayedLabel = CreateDebugRow("Time Played: 00:00:00", 2)
-        local ServerUptimeRow, ServerUptimeLabel = CreateDebugRow("Server Uptime: 00:00:00", 3)
-        local FruitRow, FruitLabel, FruitIcon = CreateDebugRow("Fruit Spawned: Checking...", 4)
-    
-        -- Debugger Update Loop
-        task.spawn(function()
-            while task.wait(0.5) do
-                DebuggerFrame.Visible = DebuggerVisible
-                if not DebuggerVisible then continue end
-                
-                -- FPS & Ping
-                local fps = math.floor(1/RunService.RenderStepped:Wait())
-                local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-                FpsLabel.Text = string.format("Fps: %d Ping: %dms", fps, ping)
-                FpsRow.Visible = ShowFpsPing
-    
-                -- Time Played
-                local playedSeconds = os.time() - StartTime
-                local p_hours = math.floor(playedSeconds / 3600)
-                local p_mins = math.floor((playedSeconds % 3600) / 60)
-                local p_secs = playedSeconds % 60
-                TimePlayedLabel.Text = string.format("Time Played: %02d:%02d:%02d", p_hours, p_mins, p_secs)
-                TimePlayedRow.Visible = ShowTimeData
-    
-                -- Server Uptime
-                local s_hours = math.floor(RawServerTime / 3600)
-                local s_mins = math.floor((RawServerTime % 3600) / 60)
-                local s_secs = math.floor(RawServerTime % 60)
-                ServerUptimeLabel.Text = string.format("Server Uptime: %02d:%02d:%02d", s_hours, s_mins, s_secs)
-                ServerUptimeRow.Visible = ShowTimeData
-    
-                -- Fruit Check
-                FruitRow.Visible = ShowFruit
-                if ShowFruit then
-                    local fruitFound = false
-                    for _, v in pairs(workspace:GetChildren()) do
-                        if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Fruit")) then
-                            fruitFound = true
-                            break
-                        end
-                    end
-                    
-                    if fruitFound then
-                        FruitLabel.Text = "Fruit Spawned: ✅"
-                        FruitIcon.Image = "rbxassetid://11326670020"
-                        FruitIcon.ImageColor3 = Theme.Success
-                    else
-                        FruitLabel.Text = "Fruit Spawned: ❌"
-                        FruitIcon.Image = "rbxassetid://10852673667"
-                        FruitIcon.ImageColor3 = Theme.Danger
-                    end
-                end
-                
-                DebuggerFrame.Size = UDim2.new(0, 300, 0, DebugList.AbsoluteContentSize.Y + 55)
-            end
-        end)
-    end
-
     function Window:MakeTabSection(name)
         local Sec = Instance.new("TextLabel")
         Sec.Size = UDim2.new(1, -20, 0, 30)
@@ -1064,6 +907,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
+        -- // UPDATED TICK COMPONENT (WITH ICON SUPPORT)
         function Elements:AddTick(title: string, iconId: string, default: boolean, side: string?, callback: (boolean) -> ())
             local isToggled = default or false
             local frame = Instance.new("Frame")
@@ -1128,6 +972,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
+        -- // UPDATED COMBIN TICK COMPONENT (WITH ICON SUPPORT)
         function Elements:AddCombinTick(title: string, ticks: {{Text: string, Icon: string, Default: boolean, Callback: (boolean) -> ()}}, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
@@ -1218,6 +1063,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
  
+        -- // UPDATED KEYBIND COMPONENT (WITH ICON SUPPORT)
         function Elements:AddKeybind(title: string, iconId: string, default: Enum.KeyCode?, side: string?, callback: (Enum.KeyCode) -> ())
             local currentKey = default or Enum.KeyCode.LeftControl
             local listening = false
@@ -1428,6 +1274,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
+        -- // UPDATED COMBIN BUTTON (WITH ICON SUPPORT)
         function Elements:AddCombinButton(title: string, buttons: {{Text: string, Icon: string?, Callback: () -> ()}}, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
