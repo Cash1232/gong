@@ -86,26 +86,10 @@ end
  
 -- // DEBUGGER LOGIC VARIABLES
 local StartTime = os.time()
-local RawServerTime = 0
 local DebuggerVisible = true
 local ShowTimeData = true
 local ShowFpsPing = true
 local ShowFruit = true
- 
--- Server Time Event Listener
-task.spawn(function()
-    local fxEvent = ReplicatedStorage:WaitForChild("Remotes", 5)
-    if fxEvent then
-        fxEvent = fxEvent:WaitForChild("FX", 5)
-        if fxEvent and fxEvent:IsA("RemoteEvent") then
-            fxEvent.OnClientEvent:Connect(function(serverTime)
-                if typeof(serverTime) == "number" then
-                    RawServerTime = serverTime
-                end
-            end)
-        end
-    end
-end)
  
 function AstralLib:CreateWindow(titleText, versionText)
     local ScreenGui = Instance.new("ScreenGui")
@@ -113,139 +97,6 @@ function AstralLib:CreateWindow(titleText, versionText)
     ScreenGui.Parent = CoreGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
- 
-    -- // DEBUGGER UI (ASTRAL STATUS)
-    local DebuggerFrame = Instance.new("Frame")
-    DebuggerFrame.Name = "AstralStatus"
-    DebuggerFrame.Size = UDim2.new(0, 300, 0, 200)
-    DebuggerFrame.Position = UDim2.new(0, 20, 0, 20)
-    DebuggerFrame.BackgroundColor3 = Theme.Background
-    DebuggerFrame.BorderSizePixel = 0
-    DebuggerFrame.ClipsDescendants = true
-    DebuggerFrame.Visible = true
-    DebuggerFrame.Parent = ScreenGui
-    Corner(10, DebuggerFrame)
-    Stroke(Theme.Border, 1, DebuggerFrame)
-    MakeDraggable(DebuggerFrame)
- 
-    local DebugHeader = Instance.new("Frame")
-    DebugHeader.Size = UDim2.new(1, 0, 0, 35)
-    DebugHeader.BackgroundColor3 = Theme.Card
-    DebugHeader.Parent = DebuggerFrame
-    Corner(10, DebugHeader)
-    
-    local DebugTitle = Instance.new("TextLabel")
-    DebugTitle.Size = UDim2.new(1, -20, 1, 0)
-    DebugTitle.Position = UDim2.new(0, 15, 0, 0)
-    DebugTitle.BackgroundTransparency = 1
-    DebugTitle.RichText = true
-    DebugTitle.Text = "<b>ASTRAL</b> STATUS"
-    DebugTitle.TextColor3 = Theme.TextPrimary
-    DebugTitle.Font = Enum.Font.GothamBold
-    DebugTitle.TextSize = 13
-    DebugTitle.TextXAlignment = Enum.TextXAlignment.Left
-    DebugTitle.Parent = DebugHeader
- 
-    local DebugContent = Instance.new("Frame")
-    DebugContent.Size = UDim2.new(1, 0, 1, -35)
-    DebugContent.Position = UDim2.new(0, 0, 0, 35)
-    DebugContent.BackgroundTransparency = 1
-    DebugContent.Parent = DebuggerFrame
- 
-    local DebugList = Instance.new("UIListLayout")
-    DebugList.Padding = UDim.new(0, 8)
-    DebugList.SortOrder = Enum.SortOrder.LayoutOrder
-    DebugList.Parent = DebugContent
-    Instance.new("UIPadding", DebugContent).PaddingTop = UDim.new(0, 12)
-    Instance.new("UIPadding", DebugContent).PaddingLeft = UDim.new(0, 15)
-    Instance.new("UIPadding", DebugContent).PaddingBottom = UDim.new(0, 12)
- 
-    local function CreateDebugRow(text, layoutOrder)
-        local Row = Instance.new("Frame")
-        Row.Size = UDim2.new(1, -15, 0, 20)
-        Row.BackgroundTransparency = 1
-        Row.LayoutOrder = layoutOrder
-        Row.Parent = DebugContent
- 
-        local Icon = Instance.new("ImageLabel")
-        Icon.Size = UDim2.new(0, 16, 0, 16)
-        Icon.Position = UDim2.new(0, 0, 0.5, -8)
-        Icon.BackgroundTransparency = 1
-        Icon.Image = "rbxassetid://11326670020"
-        Icon.ImageColor3 = Theme.Accent
-        Icon.Parent = Row
- 
-        local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(1, -25, 1, 0)
-        Label.Position = UDim2.new(0, 25, 0, 0)
-        Label.BackgroundTransparency = 1
-        Label.Text = text
-        Label.TextColor3 = Theme.TextSec
-        Label.Font = Enum.Font.GothamMedium
-        Label.TextSize = 12
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-        Label.Parent = Row
- 
-        return Row, Label, Icon
-    end
- 
-    local FpsRow, FpsLabel = CreateDebugRow("Fps: 0 Ping: 0ms", 1)
-    local TimePlayedRow, TimePlayedLabel = CreateDebugRow("Time Played: 00:00:00", 2)
-    local ServerUptimeRow, ServerUptimeLabel = CreateDebugRow("Server Uptime: 00:00:00", 3)
-    local FruitRow, FruitLabel, FruitIcon = CreateDebugRow("Fruit Spawned: Checking...", 4)
- 
-    -- Debugger Update Loop
-    task.spawn(function()
-        while task.wait(0.5) do
-            DebuggerFrame.Visible = DebuggerVisible
-            if not DebuggerVisible then continue end
-            
-            -- FPS & Ping
-            local fps = math.floor(1/RunService.RenderStepped:Wait())
-            local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-            FpsLabel.Text = string.format("Fps: %d Ping: %dms", fps, ping)
-            FpsRow.Visible = ShowFpsPing
- 
-            -- Time Played
-            local playedSeconds = os.time() - StartTime
-            local p_hours = math.floor(playedSeconds / 3600)
-            local p_mins = math.floor((playedSeconds % 3600) / 60)
-            local p_secs = playedSeconds % 60
-            TimePlayedLabel.Text = string.format("Time Played: %02d:%02d:%02d", p_hours, p_mins, p_secs)
-            TimePlayedRow.Visible = ShowTimeData
- 
-            -- Server Uptime
-            local s_hours = math.floor(RawServerTime / 3600)
-            local s_mins = math.floor((RawServerTime % 3600) / 60)
-            local s_secs = math.floor(RawServerTime % 60)
-            ServerUptimeLabel.Text = string.format("Server Uptime: %02d:%02d:%02d", s_hours, s_mins, s_secs)
-            ServerUptimeRow.Visible = ShowTimeData
- 
-            -- Fruit Check
-            FruitRow.Visible = ShowFruit
-            if ShowFruit then
-                local fruitFound = false
-                for _, v in pairs(workspace:GetChildren()) do
-                    if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Fruit")) then
-                        fruitFound = true
-                        break
-                    end
-                end
-                
-                if fruitFound then
-                    FruitLabel.Text = "Fruit Spawned: ✅"
-                    FruitIcon.Image = "rbxassetid://11326670020"
-                    FruitIcon.ImageColor3 = Theme.Success
-                else
-                    FruitLabel.Text = "Fruit Spawned: ❌"
-                    FruitIcon.Image = "rbxassetid://10852673667"
-                    FruitIcon.ImageColor3 = Theme.Danger
-                end
-            end
-            
-            DebuggerFrame.Size = UDim2.new(0, 300, 0, DebugList.AbsoluteContentSize.Y + 55)
-        end
-    end)
  
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 795, 0, 532)
@@ -389,7 +240,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         Badge.BackgroundColor3 = bgColor
         Badge.AutomaticSize = Enum.AutomaticSize.XY
         Badge.Parent = parent
-        Corner(6, Badge)
+        Corner(100, Badge) -- Updated to Pill shape
         local Padding = Instance.new("UIPadding", Badge)
         Padding.PaddingLeft = UDim.new(0, 10)
         Padding.PaddingRight = UDim.new(0, 10)
@@ -407,7 +258,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         return Badge
     end
  
-    local ActiveBadge = CreateBadge("BETA", Theme.Accent, Theme.TextPrimary, TopBar)
+    local ActiveBadge = CreateBadge(versionText or "BETA", Theme.Accent, Theme.TextPrimary, TopBar)
     ActiveBadge.Position = UDim2.new(0, 155, 0.5, -12)
  
     local Arrows = Instance.new("TextLabel")
@@ -518,6 +369,142 @@ function AstralLib:CreateWindow(titleText, versionText)
         end
     end)
  
+    function Window:AddStatus()
+        -- // DEBUGGER UI (ASTRAL STATUS) - Completely optional, triggered manually.
+        local DebuggerFrame = Instance.new("Frame")
+        DebuggerFrame.Name = "AstralStatus"
+        DebuggerFrame.Size = UDim2.new(0, 300, 0, 200)
+        DebuggerFrame.Position = UDim2.new(0, 20, 0, 20)
+        DebuggerFrame.BackgroundColor3 = Theme.Background
+        DebuggerFrame.BorderSizePixel = 0
+        DebuggerFrame.ClipsDescendants = true
+        DebuggerFrame.Visible = true
+        DebuggerFrame.Parent = ScreenGui
+        Corner(10, DebuggerFrame)
+        Stroke(Theme.Border, 1, DebuggerFrame)
+        MakeDraggable(DebuggerFrame)
+    
+        local DebugHeader = Instance.new("Frame")
+        DebugHeader.Size = UDim2.new(1, 0, 0, 35)
+        DebugHeader.BackgroundColor3 = Theme.Card
+        DebugHeader.Parent = DebuggerFrame
+        Corner(10, DebugHeader)
+        
+        local DebugTitle = Instance.new("TextLabel")
+        DebugTitle.Size = UDim2.new(1, -20, 1, 0)
+        DebugTitle.Position = UDim2.new(0, 15, 0, 0)
+        DebugTitle.BackgroundTransparency = 1
+        DebugTitle.RichText = true
+        DebugTitle.Text = "<b>ASTRAL</b> STATUS"
+        DebugTitle.TextColor3 = Theme.TextPrimary
+        DebugTitle.Font = Enum.Font.GothamBold
+        DebugTitle.TextSize = 13
+        DebugTitle.TextXAlignment = Enum.TextXAlignment.Left
+        DebugTitle.Parent = DebugHeader
+    
+        local DebugContent = Instance.new("Frame")
+        DebugContent.Size = UDim2.new(1, 0, 1, -35)
+        DebugContent.Position = UDim2.new(0, 0, 0, 35)
+        DebugContent.BackgroundTransparency = 1
+        DebugContent.Parent = DebuggerFrame
+    
+        local DebugList = Instance.new("UIListLayout")
+        DebugList.Padding = UDim.new(0, 8)
+        DebugList.SortOrder = Enum.SortOrder.LayoutOrder
+        DebugList.Parent = DebugContent
+        Instance.new("UIPadding", DebugContent).PaddingTop = UDim.new(0, 12)
+        Instance.new("UIPadding", DebugContent).PaddingLeft = UDim.new(0, 15)
+        Instance.new("UIPadding", DebugContent).PaddingBottom = UDim.new(0, 12)
+    
+        local function CreateDebugRow(text, layoutOrder)
+            local Row = Instance.new("Frame")
+            Row.Size = UDim2.new(1, -15, 0, 20)
+            Row.BackgroundTransparency = 1
+            Row.LayoutOrder = layoutOrder
+            Row.Parent = DebugContent
+    
+            local Icon = Instance.new("ImageLabel")
+            Icon.Size = UDim2.new(0, 16, 0, 16)
+            Icon.Position = UDim2.new(0, 0, 0.5, -8)
+            Icon.BackgroundTransparency = 1
+            Icon.Image = "rbxassetid://11326670020"
+            Icon.ImageColor3 = Theme.Accent
+            Icon.Parent = Row
+    
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, -25, 1, 0)
+            Label.Position = UDim2.new(0, 25, 0, 0)
+            Label.BackgroundTransparency = 1
+            Label.Text = text
+            Label.TextColor3 = Theme.TextSec
+            Label.Font = Enum.Font.GothamMedium
+            Label.TextSize = 12
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Row
+    
+            return Row, Label, Icon
+        end
+    
+        local FpsRow, FpsLabel = CreateDebugRow("Fps: 0 Ping: 0ms", 1)
+        local TimePlayedRow, TimePlayedLabel = CreateDebugRow("Time Played: 00:00:00", 2)
+        local ServerUptimeRow, ServerUptimeLabel = CreateDebugRow("Server Uptime: 00:00:00", 3)
+        local FruitRow, FruitLabel, FruitIcon = CreateDebugRow("Fruit Spawned: Checking...", 4)
+    
+        -- Debugger Update Loop
+        task.spawn(function()
+            while task.wait(0.5) do
+                DebuggerFrame.Visible = DebuggerVisible
+                if not DebuggerVisible then continue end
+                
+                -- FPS & Ping
+                local fps = math.floor(1/RunService.RenderStepped:Wait())
+                local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+                FpsLabel.Text = string.format("Fps: %d Ping: %dms", fps, ping)
+                FpsRow.Visible = ShowFpsPing
+    
+                -- Time Played
+                local playedSeconds = os.time() - StartTime
+                local p_hours = math.floor(playedSeconds / 3600)
+                local p_mins = math.floor((playedSeconds % 3600) / 60)
+                local p_secs = playedSeconds % 60
+                TimePlayedLabel.Text = string.format("Time Played: %02d:%02d:%02d", p_hours, p_mins, p_secs)
+                TimePlayedRow.Visible = ShowTimeData
+    
+                -- Server Uptime (Refactored to pull genuine server age rather than local session tracking)
+                local trueUptime = workspace.DistributedGameTime
+                local s_hours = math.floor(trueUptime / 3600)
+                local s_mins = math.floor((trueUptime % 3600) / 60)
+                local s_secs = math.floor(trueUptime % 60)
+                ServerUptimeLabel.Text = string.format("Server Uptime: %02d:%02d:%02d", s_hours, s_mins, s_secs)
+                ServerUptimeRow.Visible = ShowTimeData
+    
+                -- Fruit Check
+                FruitRow.Visible = ShowFruit
+                if ShowFruit then
+                    local fruitFound = false
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v:IsA("Tool") and (string.find(v.Name, "Fruit") or string.find(v.Name, "Fruit")) then
+                            fruitFound = true
+                            break
+                        end
+                    end
+                    
+                    if fruitFound then
+                        FruitLabel.Text = "Fruit Spawned: ✅"
+                        FruitIcon.Image = "rbxassetid://11326670020"
+                        FruitIcon.ImageColor3 = Theme.Success
+                    else
+                        FruitLabel.Text = "Fruit Spawned: ❌"
+                        FruitIcon.Image = "rbxassetid://10852673667"
+                        FruitIcon.ImageColor3 = Theme.Danger
+                    end
+                end
+                
+                DebuggerFrame.Size = UDim2.new(0, 300, 0, DebugList.AbsoluteContentSize.Y + 55)
+            end
+        end)
+    end
+
     function Window:MakeTabSection(name)
         local Sec = Instance.new("TextLabel")
         Sec.Size = UDim2.new(1, -20, 0, 30)
@@ -550,7 +537,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         TabBg.Size = UDim2.new(1, 0, 1, 0)
         TabBg.BackgroundColor3 = Color3.fromRGB(32, 32, 35)
         TabBg.Parent = TabBtn
-        Corner(8, TabBg)
+        Corner(100, TabBg) -- Pill shape applied
         local TabStroke = Stroke(Color3.fromRGB(50, 50, 55), 1, TabBg)
  
         local TabGradient = Instance.new("UIGradient")
@@ -739,7 +726,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             pill.Position = UDim2.new(0, 30, 0.5, -15)
             pill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
             pill.Parent = graphics
-            Corner(15, pill)
+            Corner(100, pill) -- Applied strict pill shape
             local arc = Instance.new("ImageLabel")
             arc.Size = UDim2.new(0, 140, 0, 70)
             arc.Position = UDim2.new(0, 130, 0.5, -5)
@@ -828,7 +815,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             dot.AnchorPoint = Vector2.new(0, 0.5)
             dot.BackgroundColor3 = statusColor
             dot.Parent = statusContainer
-            Corner(8, dot)
+            Corner(100, dot)
  
             local statusText = Instance.new("TextLabel")
             statusText.Text = status
@@ -983,7 +970,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             btn.TextSize = 15
             btn.AutoButtonColor = true
             btn.Parent = frame
-            Corner(6, btn)
+            Corner(100, btn) -- Pill applied
             task.spawn(function()
                 if httpRequest then
                     local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
@@ -1046,14 +1033,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             btn.BackgroundColor3 = Theme.Border
             btn.Text = ""
             btn.Parent = frame
-            Corner(6, btn)
+            Corner(100, btn) -- Pill applied
             local knob = Instance.new("Frame")
             knob.Size = UDim2.new(0, 20, 0, 20)
             knob.Position = UDim2.new(0, 3, 0.5, 0)
             knob.AnchorPoint = Vector2.new(0, 0.5)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = btn
-            Corner(4, knob)
+            Corner(100, knob)
             btn.MouseButton1Click:Connect(function()
                 isToggled = not isToggled
                 TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Position = isToggled and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)}):Play()
@@ -1062,7 +1049,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED TICK COMPONENT (WITH ICON SUPPORT)
         function Elements:AddTick(title: string, iconId: string, default: boolean, side: string?, callback: (boolean) -> ())
             local isToggled = default or false
             local frame = Instance.new("Frame")
@@ -1127,7 +1113,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED COMBIN TICK COMPONENT (WITH ICON SUPPORT)
         function Elements:AddCombinTick(title: string, ticks: {{Text: string, Icon: string, Default: boolean, Callback: (boolean) -> ()}}, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
@@ -1196,7 +1181,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                 box.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
                 box.Text = ""
                 box.Parent = row
-                Corner(5, box)
+                Corner(6, box)
                 Stroke(Theme.Accent, 1.5, box)
  
                 local check = Instance.new("ImageLabel")
@@ -1218,7 +1203,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
  
-        -- // UPDATED KEYBIND COMPONENT (WITH ICON SUPPORT)
         function Elements:AddKeybind(title: string, iconId: string, default: Enum.KeyCode?, side: string?, callback: (Enum.KeyCode) -> ())
             local currentKey = default or Enum.KeyCode.LeftControl
             local listening = false
@@ -1268,7 +1252,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             bindBox.TextColor3 = Theme.TextPrimary
             bindBox.TextSize = 11
             bindBox.Parent = frame
-            Corner(6, bindBox)
+            Corner(100, bindBox) -- Pill applied
             Stroke(Theme.Border, 1, bindBox)
  
             bindBox.MouseButton1Click:Connect(function()
@@ -1291,7 +1275,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
             frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
+            Corner(100, frame) -- High-priority structural pill applied to full button container where feasible
             Stroke(Theme.Border, 1, frame)
             local Scale = Instance.new("UIScale", frame)
             local ibg = Instance.new("Frame")
@@ -1300,7 +1284,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(100, ibg) 
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1406,7 +1390,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             submit.TextColor3 = Color3.new(1, 1, 1)
             submit.TextSize = 13
             submit.Parent = frame
-            Corner(6, submit)
+            Corner(100, submit) -- Pill applied
  
             local statusLabel = Instance.new("TextLabel")
             statusLabel.Size = UDim2.new(1, -135, 0, 15)
@@ -1429,7 +1413,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
  
-        -- // UPDATED COMBIN BUTTON (WITH ICON SUPPORT)
         function Elements:AddCombinButton(title: string, buttons: {{Text: string, Icon: string?, Callback: () -> ()}}, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
@@ -1471,7 +1454,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                 b.BackgroundColor3 = Theme.Accent
                 b.Text = ""
                 b.Parent = container
-                Corner(6, b)
+                Corner(100, b) -- Pill applied
  
                 local bIcon = Instance.new("ImageLabel")
                 bIcon.Size = UDim2.fromOffset(16, 16)
@@ -1538,7 +1521,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             inputFrame.AnchorPoint = Vector2.new(0, 0.5)
             inputFrame.BackgroundColor3 = Theme.Background
             inputFrame.Parent = frame
-            Corner(4, inputFrame)
+            Corner(6, inputFrame)
             Stroke(Theme.Border, 1, inputFrame)
             local box = Instance.new("TextBox")
             box.Size = UDim2.new(1, -10, 1, 0)
@@ -1610,13 +1593,13 @@ function AstralLib:CreateWindow(titleText, versionText)
             SliderBG.AnchorPoint = Vector2.new(0, 0.5)
             SliderBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             SliderBG.Parent = frame
-            Corner(2, SliderBG)
+            Corner(100, SliderBG)
  
             local Progress = Instance.new("Frame")
             Progress.Size = UDim2.fromScale((default - min) / (max - min), 1)
             Progress.BackgroundColor3 = Theme.Accent
             Progress.Parent = SliderBG
-            Corner(2, Progress)
+            Corner(100, Progress)
  
             local knob = Instance.new("Frame")
             knob.Size = UDim2.new(0, 10, 0, 20)
@@ -1624,7 +1607,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             knob.AnchorPoint = Vector2.new(0.5, 0.5)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = SliderBG
-            Corner(2, knob)
+            Corner(100, knob)
             Stroke(Color3.new(0,0,0), 1, knob)
  
             local function update(inputPos)
@@ -1801,7 +1784,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                         indicator.Visible = isSelected ~= nil
                         indicator.ZIndex = 505
                         indicator.Parent = btn
-                        Corner(2, indicator)
+                        Corner(100, indicator)
                         local optLabel = Instance.new("TextLabel")
                         optLabel.Size = UDim2.new(1, -30, 1, 0)
                         optLabel.Position = UDim2.new(0, 20, 0, 0)
@@ -1828,226 +1811,36 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
             SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateList)
             local function TogglePanel(state)
-                if state then Overlay.Visible = true UpdateList() TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
-                else TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() task.delay(0.3, function() Overlay.Visible = false end) end
+                if state then 
+                    Overlay.Visible = true 
+                    UpdateList() 
+                    TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
+                else 
+                    TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play()
+                    task.delay(0.3, function() Overlay.Visible = false end)
+                end
             end
-            local trigger = Instance.new("TextButton")
-            trigger.Size = UDim2.fromScale(1, 1)
-            trigger.BackgroundTransparency = 1
-            trigger.Text = ""
-            trigger.Parent = frame
-            trigger.MouseButton1Click:Connect(function() TogglePanel(true) end)
+            
+            local openBtn = Instance.new("TextButton")
+            openBtn.Size = UDim2.new(0, 50, 0, 26)
+            openBtn.Position = UDim2.new(1, -12, 0.5, 0)
+            openBtn.AnchorPoint = Vector2.new(1, 0.5)
+            openBtn.BackgroundColor3 = Theme.Accent
+            openBtn.Text = "Select"
+            openBtn.Font = Enum.Font.GothamBold
+            openBtn.TextColor3 = Color3.new(1, 1, 1)
+            openBtn.TextSize = 11
+            openBtn.Parent = frame
+            Corner(100, openBtn) -- Pill shape
+            
+            openBtn.MouseButton1Click:Connect(function() TogglePanel(true) end)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
         end
- 
-        function Elements:AddColorPicker(title: string, sub: string, default: Color3, side: string?, callback: (Color3) -> ())
-            local h, s, v = Color3.toHSV(default)
-            local originalColor = default
-            local currentColor = default
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 80)
-            frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
-            local ibg = Instance.new("Frame")
-            ibg.Size = UDim2.fromOffset(60, 60)
-            ibg.Position = UDim2.new(0, 12, 0.5, 0)
-            ibg.AnchorPoint = Vector2.new(0, 0.5)
-            ibg.BackgroundColor3 = Theme.IconBg
-            ibg.Parent = frame
-            Corner(10, ibg)
-            local icon = Instance.new("ImageLabel")
-            icon.Size = UDim2.fromScale(0.7, 0.7)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = "rbxassetid://114291598644525"
-            icon.BackgroundTransparency = 1
-            icon.Parent = ibg
-            local label = Instance.new("TextLabel")
-            label.Text = title
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 14
-            label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 82, 0.5, -10)
-            label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -140, 0, 20)
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.BackgroundTransparency = 1
-            label.Parent = frame
-            local subLabel = Instance.new("TextLabel")
-            subLabel.Text = sub
-            subLabel.Font = Enum.Font.GothamMedium
-            subLabel.TextSize = 11
-            subLabel.TextColor3 = Theme.TextSec
-            subLabel.Position = UDim2.new(0, 82, 0.5, 10)
-            subLabel.AnchorPoint = Vector2.new(0, 0.5)
-            subLabel.Size = UDim2.new(1, -140, 0, 20)
-            subLabel.TextXAlignment = Enum.TextXAlignment.Left
-            subLabel.BackgroundTransparency = 1
-            subLabel.Parent = frame
-            local ColorSquare = Instance.new("TextButton")
-            ColorSquare.Size = UDim2.fromOffset(55, 35)
-            ColorSquare.Position = UDim2.new(1, -15, 0.5, 0)
-            ColorSquare.AnchorPoint = Vector2.new(1, 0.5)
-            ColorSquare.BackgroundColor3 = default
-            ColorSquare.Text = ""
-            ColorSquare.Parent = frame
-            Corner(5, ColorSquare)
-            Stroke(Theme.Border, 1, ColorSquare)
-            local Overlay = Instance.new("TextButton")
-            Overlay.Size = UDim2.fromScale(1, 1)
-            Overlay.BackgroundTransparency = 1
-            Overlay.Text = ""
-            Overlay.Visible = false
-            Overlay.ZIndex = 500
-            Overlay.Parent = MainFrame
-            local Panel = Instance.new("Frame")
-            Panel.Size = UDim2.new(0, 240, 1, 0)
-            Panel.Position = UDim2.new(1, 0, 0, 0)
-            Panel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-            Panel.BorderSizePixel = 0
-            Panel.ZIndex = 501
-            Panel.ClipsDescendants = true
-            Panel.Active = true
-            Panel.Parent = MainFrame
-            Stroke(Theme.Border, 1, Panel)
-            local Title = Instance.new("TextLabel")
-            Title.Text = "Color Picker"
-            Title.Font = Enum.Font.GothamBold
-            Title.TextSize = 16
-            Title.TextColor3 = Theme.TextPrimary
-            Title.Position = UDim2.new(0, 15, 0, 15)
-            Title.Size = UDim2.new(0, 100, 0, 20)
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            Title.BackgroundTransparency = 1
-            Title.ZIndex = 502
-            Title.Parent = Panel
-            local HexInput = Instance.new("TextBox")
-            HexInput.Size = UDim2.new(1, -30, 0, 30)
-            HexInput.Position = UDim2.new(0, 15, 0, 45)
-            HexInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            HexInput.Text = "#" .. default:ToHex():upper()
-            HexInput.Font = Enum.Font.Code
-            HexInput.TextSize = 12
-            HexInput.TextColor3 = Theme.TextPrimary
-            HexInput.ZIndex = 502
-            HexInput.Parent = Panel
-            Corner(6, HexInput)
-            Stroke(Theme.Border, 1, HexInput)
-            local SVMap = Instance.new("ImageLabel")
-            SVMap.Size = UDim2.new(1, -30, 0, 150)
-            SVMap.Position = UDim2.new(0, 15, 0, 85)
-            SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
-            SVMap.Image = "rbxassetid://4155801252"
-            SVMap.ZIndex = 502
-            SVMap.Active = true
-            SVMap.Parent = Panel
-            Corner(8, SVMap)
-            local SVCursor = Instance.new("Frame")
-            SVCursor.Size = UDim2.fromOffset(10, 10)
-            SVCursor.Position = UDim2.fromScale(s, 1 - v)
-            SVCursor.AnchorPoint = Vector2.new(0.5, 0.5)
-            SVCursor.BackgroundColor3 = Color3.new(1, 1, 1)
-            SVCursor.ZIndex = 503
-            SVCursor.Parent = SVMap
-            Corner(10, SVCursor)
-            Stroke(Color3.new(0, 0, 0), 1, SVCursor)
-            local HueSlider = Instance.new("ImageLabel")
-            HueSlider.Size = UDim2.new(1, -30, 0, 20)
-            HueSlider.Position = UDim2.new(0, 15, 0, 245)
-            HueSlider.BackgroundColor3 = Color3.new(1, 1, 1)
-            HueSlider.ZIndex = 502
-            HueSlider.Active = true
-            HueSlider.Parent = Panel
-            Corner(6, HueSlider)
-            local HueGradient = Instance.new("UIGradient")
-            HueGradient.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
-                ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
-                ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)),
-                ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
-                ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
-                ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
-            })
-            HueGradient.Parent = HueSlider
-            local HueCursor = Instance.new("Frame")
-            HueCursor.Size = UDim2.new(0, 4, 1, 0)
-            HueCursor.Position = UDim2.fromScale(h, 0)
-            HueCursor.BackgroundColor3 = Color3.new(1, 1, 1)
-            HueCursor.ZIndex = 503
-            HueCursor.Parent = HueSlider
-            Corner(2, HueCursor)
-            local PreviewContainer = Instance.new("Frame")
-            PreviewContainer.Size = UDim2.new(1, -30, 0, 40)
-            PreviewContainer.Position = UDim2.new(0, 15, 0, 275)
-            PreviewContainer.BackgroundTransparency = 1
-            PreviewContainer.ZIndex = 502
-            PreviewContainer.Active = true
-            PreviewContainer.Parent = Panel
-            local NewColorPreview = Instance.new("Frame")
-            NewColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
-            NewColorPreview.BackgroundColor3 = default
-            NewColorPreview.ZIndex = 503
-            NewColorPreview.Parent = PreviewContainer
-            Corner(6, NewColorPreview)
-            Stroke(Theme.Border, 1, NewColorPreview)
-            local OldColorPreview = Instance.new("Frame")
-            OldColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
-            OldColorPreview.Position = UDim2.new(0.5, 5, 0, 0)
-            OldColorPreview.BackgroundColor3 = default
-            OldColorPreview.ZIndex = 503
-            OldColorPreview.Parent = PreviewContainer
-            Corner(6, OldColorPreview)
-            Stroke(Theme.Border, 1, OldColorPreview)
-            local ApplyBtn = Instance.new("TextButton")
-            ApplyBtn.Size = UDim2.new(1, -30, 0, 35)
-            ApplyBtn.Position = UDim2.new(0, 15, 0, 325)
-            ApplyBtn.BackgroundColor3 = Theme.Accent
-            ApplyBtn.Text = "Apply"
-            ApplyBtn.Font = Enum.Font.GothamBold
-            ApplyBtn.TextColor3 = Color3.new(1, 1, 1)
-            ApplyBtn.TextSize = 14
-            ApplyBtn.ZIndex = 502
-            ApplyBtn.Parent = Panel
-            Corner(6, ApplyBtn)
-            local function UpdateColor(skipHex: boolean?)
-                currentColor = Color3.fromHSV(h, s, v)
-                NewColorPreview.BackgroundColor3 = currentColor
-                SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
-                if not skipHex then HexInput.Text = "#" .. currentColor:ToHex():upper() end
-                SVCursor.Position = UDim2.fromScale(s, 1 - v)
-                HueCursor.Position = UDim2.fromScale(h, 0)
-            end
-            HexInput.FocusLost:Connect(function()
-                local success, result = pcall(Color3.fromHex, HexInput.Text)
-                if success then local nh, ns, nv = Color3.toHSV(result) h, s, v = nh, ns, nv UpdateColor(true) else HexInput.Text = "#" .. currentColor:ToHex():upper() end
-            end)
-            local draggingSV = false
-            SVMap.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = true end end)
-            local draggingHue = false
-            HueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end end)
-            UserInputService.InputChanged:Connect(function(input)
-                if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local pos = Vector2.new(math.clamp((input.Position.X - SVMap.AbsolutePosition.X) / SVMap.AbsoluteSize.X, 0, 1), math.clamp((input.Position.Y - SVMap.AbsolutePosition.Y) / SVMap.AbsoluteSize.Y, 0, 1))
-                    s = pos.X v = 1 - pos.Y UpdateColor()
-                elseif draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    h = math.clamp((input.Position.X - HueSlider.AbsolutePosition.X) / HueSlider.AbsoluteSize.X, 0, 1) UpdateColor()
-                end
-            end)
-            UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false draggingHue = false end end)
-            local function TogglePanel(state)
-                if state then originalColor = currentColor OldColorPreview.BackgroundColor3 = originalColor Overlay.Visible = true TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
-                else TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() task.delay(0.3, function() Overlay.Visible = false end) end
-            end
-            ApplyBtn.MouseButton1Click:Connect(function() ColorSquare.BackgroundColor3 = currentColor callback(currentColor) TogglePanel(false) end)
-            ColorSquare.MouseButton1Click:Connect(function() TogglePanel(true) end)
-        end
- 
-    return Elements, DebuggerFrame
+        
+        return Elements
     end
+
     return Window
 end
- 
+
 return AstralLib
