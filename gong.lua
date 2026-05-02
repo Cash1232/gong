@@ -86,10 +86,26 @@ end
  
 -- // DEBUGGER LOGIC VARIABLES
 local StartTime = os.time()
+local RawServerTime = 0
 local DebuggerVisible = true
 local ShowTimeData = true
 local ShowFpsPing = true
 local ShowFruit = true
+ 
+-- Server Time Event Listener
+task.spawn(function()
+    local fxEvent = ReplicatedStorage:WaitForChild("Remotes", 5)
+    if fxEvent then
+        fxEvent = fxEvent:WaitForChild("FX", 5)
+        if fxEvent and fxEvent:IsA("RemoteEvent") then
+            fxEvent.OnClientEvent:Connect(function(serverTime)
+                if typeof(serverTime) == "number" then
+                    RawServerTime = serverTime
+                end
+            end)
+        end
+    end
+end)
  
 function AstralLib:CreateWindow(titleText, versionText)
     local ScreenGui = Instance.new("ScreenGui")
@@ -240,7 +256,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         Badge.BackgroundColor3 = bgColor
         Badge.AutomaticSize = Enum.AutomaticSize.XY
         Badge.Parent = parent
-        Corner(100, Badge) -- Updated to Pill shape
+        Corner(6, Badge)
         local Padding = Instance.new("UIPadding", Badge)
         Padding.PaddingLeft = UDim.new(0, 10)
         Padding.PaddingRight = UDim.new(0, 10)
@@ -258,7 +274,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         return Badge
     end
  
-    local ActiveBadge = CreateBadge(versionText or "BETA", Theme.Accent, Theme.TextPrimary, TopBar)
+    local ActiveBadge = CreateBadge("BETA", Theme.Accent, Theme.TextPrimary, TopBar)
     ActiveBadge.Position = UDim2.new(0, 155, 0.5, -12)
  
     local Arrows = Instance.new("TextLabel")
@@ -370,7 +386,7 @@ function AstralLib:CreateWindow(titleText, versionText)
     end)
  
     function Window:AddStatus()
-        -- // DEBUGGER UI (ASTRAL STATUS) - Completely optional, triggered manually.
+        -- // DEBUGGER UI (ASTRAL STATUS)
         local DebuggerFrame = Instance.new("Frame")
         DebuggerFrame.Name = "AstralStatus"
         DebuggerFrame.Size = UDim2.new(0, 300, 0, 200)
@@ -470,11 +486,10 @@ function AstralLib:CreateWindow(titleText, versionText)
                 TimePlayedLabel.Text = string.format("Time Played: %02d:%02d:%02d", p_hours, p_mins, p_secs)
                 TimePlayedRow.Visible = ShowTimeData
     
-                -- Server Uptime (Refactored to pull genuine server age rather than local session tracking)
-                local trueUptime = workspace.DistributedGameTime
-                local s_hours = math.floor(trueUptime / 3600)
-                local s_mins = math.floor((trueUptime % 3600) / 60)
-                local s_secs = math.floor(trueUptime % 60)
+                -- Server Uptime
+                local s_hours = math.floor(RawServerTime / 3600)
+                local s_mins = math.floor((RawServerTime % 3600) / 60)
+                local s_secs = math.floor(RawServerTime % 60)
                 ServerUptimeLabel.Text = string.format("Server Uptime: %02d:%02d:%02d", s_hours, s_mins, s_secs)
                 ServerUptimeRow.Visible = ShowTimeData
     
@@ -537,7 +552,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         TabBg.Size = UDim2.new(1, 0, 1, 0)
         TabBg.BackgroundColor3 = Color3.fromRGB(32, 32, 35)
         TabBg.Parent = TabBtn
-        Corner(100, TabBg) -- Pill shape applied
+        Corner(8, TabBg)
         local TabStroke = Stroke(Color3.fromRGB(50, 50, 55), 1, TabBg)
  
         local TabGradient = Instance.new("UIGradient")
@@ -726,7 +741,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             pill.Position = UDim2.new(0, 30, 0.5, -15)
             pill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
             pill.Parent = graphics
-            Corner(100, pill) -- Applied strict pill shape
+            Corner(15, pill)
             local arc = Instance.new("ImageLabel")
             arc.Size = UDim2.new(0, 140, 0, 70)
             arc.Position = UDim2.new(0, 130, 0.5, -5)
@@ -815,7 +830,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             dot.AnchorPoint = Vector2.new(0, 0.5)
             dot.BackgroundColor3 = statusColor
             dot.Parent = statusContainer
-            Corner(100, dot)
+            Corner(8, dot)
  
             local statusText = Instance.new("TextLabel")
             statusText.Text = status
@@ -970,7 +985,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             btn.TextSize = 15
             btn.AutoButtonColor = true
             btn.Parent = frame
-            Corner(100, btn) -- Pill applied
+            Corner(6, btn)
             task.spawn(function()
                 if httpRequest then
                     local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
@@ -1033,14 +1048,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             btn.BackgroundColor3 = Theme.Border
             btn.Text = ""
             btn.Parent = frame
-            Corner(100, btn) -- Pill applied
+            Corner(6, btn)
             local knob = Instance.new("Frame")
             knob.Size = UDim2.new(0, 20, 0, 20)
             knob.Position = UDim2.new(0, 3, 0.5, 0)
             knob.AnchorPoint = Vector2.new(0, 0.5)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = btn
-            Corner(100, knob)
+            Corner(4, knob)
             btn.MouseButton1Click:Connect(function()
                 isToggled = not isToggled
                 TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Position = isToggled and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)}):Play()
@@ -1181,7 +1196,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                 box.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
                 box.Text = ""
                 box.Parent = row
-                Corner(6, box)
+                Corner(5, box)
                 Stroke(Theme.Accent, 1.5, box)
  
                 local check = Instance.new("ImageLabel")
@@ -1252,7 +1267,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             bindBox.TextColor3 = Theme.TextPrimary
             bindBox.TextSize = 11
             bindBox.Parent = frame
-            Corner(100, bindBox) -- Pill applied
+            Corner(6, bindBox)
             Stroke(Theme.Border, 1, bindBox)
  
             bindBox.MouseButton1Click:Connect(function()
@@ -1275,7 +1290,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
             frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(100, frame) -- High-priority structural pill applied to full button container where feasible
+            Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local Scale = Instance.new("UIScale", frame)
             local ibg = Instance.new("Frame")
@@ -1284,7 +1299,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(100, ibg) 
+            Corner(10, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1390,7 +1405,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             submit.TextColor3 = Color3.new(1, 1, 1)
             submit.TextSize = 13
             submit.Parent = frame
-            Corner(100, submit) -- Pill applied
+            Corner(6, submit)
  
             local statusLabel = Instance.new("TextLabel")
             statusLabel.Size = UDim2.new(1, -135, 0, 15)
@@ -1454,7 +1469,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                 b.BackgroundColor3 = Theme.Accent
                 b.Text = ""
                 b.Parent = container
-                Corner(100, b) -- Pill applied
+                Corner(6, b)
  
                 local bIcon = Instance.new("ImageLabel")
                 bIcon.Size = UDim2.fromOffset(16, 16)
@@ -1521,7 +1536,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             inputFrame.AnchorPoint = Vector2.new(0, 0.5)
             inputFrame.BackgroundColor3 = Theme.Background
             inputFrame.Parent = frame
-            Corner(6, inputFrame)
+            Corner(4, inputFrame)
             Stroke(Theme.Border, 1, inputFrame)
             local box = Instance.new("TextBox")
             box.Size = UDim2.new(1, -10, 1, 0)
@@ -1593,13 +1608,13 @@ function AstralLib:CreateWindow(titleText, versionText)
             SliderBG.AnchorPoint = Vector2.new(0, 0.5)
             SliderBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             SliderBG.Parent = frame
-            Corner(100, SliderBG)
+            Corner(2, SliderBG)
  
             local Progress = Instance.new("Frame")
             Progress.Size = UDim2.fromScale((default - min) / (max - min), 1)
             Progress.BackgroundColor3 = Theme.Accent
             Progress.Parent = SliderBG
-            Corner(100, Progress)
+            Corner(2, Progress)
  
             local knob = Instance.new("Frame")
             knob.Size = UDim2.new(0, 10, 0, 20)
@@ -1607,7 +1622,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             knob.AnchorPoint = Vector2.new(0.5, 0.5)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = SliderBG
-            Corner(100, knob)
+            Corner(2, knob)
             Stroke(Color3.new(0,0,0), 1, knob)
  
             local function update(inputPos)
@@ -1784,7 +1799,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                         indicator.Visible = isSelected ~= nil
                         indicator.ZIndex = 505
                         indicator.Parent = btn
-                        Corner(100, indicator)
+                        Corner(2, indicator)
                         local optLabel = Instance.new("TextLabel")
                         optLabel.Size = UDim2.new(1, -30, 1, 0)
                         optLabel.Position = UDim2.new(0, 20, 0, 0)
@@ -1811,36 +1826,226 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
             SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateList)
             local function TogglePanel(state)
-                if state then 
-                    Overlay.Visible = true 
-                    UpdateList() 
-                    TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
-                else 
-                    TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play()
-                    task.delay(0.3, function() Overlay.Visible = false end)
-                end
+                if state then Overlay.Visible = true UpdateList() TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
+                else TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() task.delay(0.3, function() Overlay.Visible = false end) end
             end
-            
-            local openBtn = Instance.new("TextButton")
-            openBtn.Size = UDim2.new(0, 50, 0, 26)
-            openBtn.Position = UDim2.new(1, -12, 0.5, 0)
-            openBtn.AnchorPoint = Vector2.new(1, 0.5)
-            openBtn.BackgroundColor3 = Theme.Accent
-            openBtn.Text = "Select"
-            openBtn.Font = Enum.Font.GothamBold
-            openBtn.TextColor3 = Color3.new(1, 1, 1)
-            openBtn.TextSize = 11
-            openBtn.Parent = frame
-            Corner(100, openBtn) -- Pill shape
-            
-            openBtn.MouseButton1Click:Connect(function() TogglePanel(true) end)
+            local trigger = Instance.new("TextButton")
+            trigger.Size = UDim2.fromScale(1, 1)
+            trigger.BackgroundTransparency = 1
+            trigger.Text = ""
+            trigger.Parent = frame
+            trigger.MouseButton1Click:Connect(function() TogglePanel(true) end)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
         end
-        
-        return Elements
+ 
+        function Elements:AddColorPicker(title: string, sub: string, default: Color3, side: string?, callback: (Color3) -> ())
+            local h, s, v = Color3.toHSV(default)
+            local originalColor = default
+            local currentColor = default
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 80)
+            frame.BackgroundColor3 = Theme.Card
+            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+            local ibg = Instance.new("Frame")
+            ibg.Size = UDim2.fromOffset(60, 60)
+            ibg.Position = UDim2.new(0, 12, 0.5, 0)
+            ibg.AnchorPoint = Vector2.new(0, 0.5)
+            ibg.BackgroundColor3 = Theme.IconBg
+            ibg.Parent = frame
+            Corner(10, ibg)
+            local icon = Instance.new("ImageLabel")
+            icon.Size = UDim2.fromScale(0.7, 0.7)
+            icon.Position = UDim2.fromScale(0.5, 0.5)
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Image = "rbxassetid://114291598644525"
+            icon.BackgroundTransparency = 1
+            icon.Parent = ibg
+            local label = Instance.new("TextLabel")
+            label.Text = title
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 14
+            label.TextColor3 = Theme.TextPrimary
+            label.Position = UDim2.new(0, 82, 0.5, -10)
+            label.AnchorPoint = Vector2.new(0, 0.5)
+            label.Size = UDim2.new(1, -140, 0, 20)
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.BackgroundTransparency = 1
+            label.Parent = frame
+            local subLabel = Instance.new("TextLabel")
+            subLabel.Text = sub
+            subLabel.Font = Enum.Font.GothamMedium
+            subLabel.TextSize = 11
+            subLabel.TextColor3 = Theme.TextSec
+            subLabel.Position = UDim2.new(0, 82, 0.5, 10)
+            subLabel.AnchorPoint = Vector2.new(0, 0.5)
+            subLabel.Size = UDim2.new(1, -140, 0, 20)
+            subLabel.TextXAlignment = Enum.TextXAlignment.Left
+            subLabel.BackgroundTransparency = 1
+            subLabel.Parent = frame
+            local ColorSquare = Instance.new("TextButton")
+            ColorSquare.Size = UDim2.fromOffset(55, 35)
+            ColorSquare.Position = UDim2.new(1, -15, 0.5, 0)
+            ColorSquare.AnchorPoint = Vector2.new(1, 0.5)
+            ColorSquare.BackgroundColor3 = default
+            ColorSquare.Text = ""
+            ColorSquare.Parent = frame
+            Corner(5, ColorSquare)
+            Stroke(Theme.Border, 1, ColorSquare)
+            local Overlay = Instance.new("TextButton")
+            Overlay.Size = UDim2.fromScale(1, 1)
+            Overlay.BackgroundTransparency = 1
+            Overlay.Text = ""
+            Overlay.Visible = false
+            Overlay.ZIndex = 500
+            Overlay.Parent = MainFrame
+            local Panel = Instance.new("Frame")
+            Panel.Size = UDim2.new(0, 240, 1, 0)
+            Panel.Position = UDim2.new(1, 0, 0, 0)
+            Panel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            Panel.BorderSizePixel = 0
+            Panel.ZIndex = 501
+            Panel.ClipsDescendants = true
+            Panel.Active = true
+            Panel.Parent = MainFrame
+            Stroke(Theme.Border, 1, Panel)
+            local Title = Instance.new("TextLabel")
+            Title.Text = "Color Picker"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextSize = 16
+            Title.TextColor3 = Theme.TextPrimary
+            Title.Position = UDim2.new(0, 15, 0, 15)
+            Title.Size = UDim2.new(0, 100, 0, 20)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.BackgroundTransparency = 1
+            Title.ZIndex = 502
+            Title.Parent = Panel
+            local HexInput = Instance.new("TextBox")
+            HexInput.Size = UDim2.new(1, -30, 0, 30)
+            HexInput.Position = UDim2.new(0, 15, 0, 45)
+            HexInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            HexInput.Text = "#" .. default:ToHex():upper()
+            HexInput.Font = Enum.Font.Code
+            HexInput.TextSize = 12
+            HexInput.TextColor3 = Theme.TextPrimary
+            HexInput.ZIndex = 502
+            HexInput.Parent = Panel
+            Corner(6, HexInput)
+            Stroke(Theme.Border, 1, HexInput)
+            local SVMap = Instance.new("ImageLabel")
+            SVMap.Size = UDim2.new(1, -30, 0, 150)
+            SVMap.Position = UDim2.new(0, 15, 0, 85)
+            SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+            SVMap.Image = "rbxassetid://4155801252"
+            SVMap.ZIndex = 502
+            SVMap.Active = true
+            SVMap.Parent = Panel
+            Corner(8, SVMap)
+            local SVCursor = Instance.new("Frame")
+            SVCursor.Size = UDim2.fromOffset(10, 10)
+            SVCursor.Position = UDim2.fromScale(s, 1 - v)
+            SVCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+            SVCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+            SVCursor.ZIndex = 503
+            SVCursor.Parent = SVMap
+            Corner(10, SVCursor)
+            Stroke(Color3.new(0, 0, 0), 1, SVCursor)
+            local HueSlider = Instance.new("ImageLabel")
+            HueSlider.Size = UDim2.new(1, -30, 0, 20)
+            HueSlider.Position = UDim2.new(0, 15, 0, 245)
+            HueSlider.BackgroundColor3 = Color3.new(1, 1, 1)
+            HueSlider.ZIndex = 502
+            HueSlider.Active = true
+            HueSlider.Parent = Panel
+            Corner(6, HueSlider)
+            local HueGradient = Instance.new("UIGradient")
+            HueGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
+                ColorSequenceKeypoint.new(0.16, Color3.fromHSV(0.16, 1, 1)),
+                ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)),
+                ColorSequenceKeypoint.new(0.66, Color3.fromHSV(0.66, 1, 1)),
+                ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+            })
+            HueGradient.Parent = HueSlider
+            local HueCursor = Instance.new("Frame")
+            HueCursor.Size = UDim2.new(0, 4, 1, 0)
+            HueCursor.Position = UDim2.fromScale(h, 0)
+            HueCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+            HueCursor.ZIndex = 503
+            HueCursor.Parent = HueSlider
+            Corner(2, HueCursor)
+            local PreviewContainer = Instance.new("Frame")
+            PreviewContainer.Size = UDim2.new(1, -30, 0, 40)
+            PreviewContainer.Position = UDim2.new(0, 15, 0, 275)
+            PreviewContainer.BackgroundTransparency = 1
+            PreviewContainer.ZIndex = 502
+            PreviewContainer.Active = true
+            PreviewContainer.Parent = Panel
+            local NewColorPreview = Instance.new("Frame")
+            NewColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
+            NewColorPreview.BackgroundColor3 = default
+            NewColorPreview.ZIndex = 503
+            NewColorPreview.Parent = PreviewContainer
+            Corner(6, NewColorPreview)
+            Stroke(Theme.Border, 1, NewColorPreview)
+            local OldColorPreview = Instance.new("Frame")
+            OldColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
+            OldColorPreview.Position = UDim2.new(0.5, 5, 0, 0)
+            OldColorPreview.BackgroundColor3 = default
+            OldColorPreview.ZIndex = 503
+            OldColorPreview.Parent = PreviewContainer
+            Corner(6, OldColorPreview)
+            Stroke(Theme.Border, 1, OldColorPreview)
+            local ApplyBtn = Instance.new("TextButton")
+            ApplyBtn.Size = UDim2.new(1, -30, 0, 35)
+            ApplyBtn.Position = UDim2.new(0, 15, 0, 325)
+            ApplyBtn.BackgroundColor3 = Theme.Accent
+            ApplyBtn.Text = "Apply"
+            ApplyBtn.Font = Enum.Font.GothamBold
+            ApplyBtn.TextColor3 = Color3.new(1, 1, 1)
+            ApplyBtn.TextSize = 14
+            ApplyBtn.ZIndex = 502
+            ApplyBtn.Parent = Panel
+            Corner(6, ApplyBtn)
+            local function UpdateColor(skipHex: boolean?)
+                currentColor = Color3.fromHSV(h, s, v)
+                NewColorPreview.BackgroundColor3 = currentColor
+                SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                if not skipHex then HexInput.Text = "#" .. currentColor:ToHex():upper() end
+                SVCursor.Position = UDim2.fromScale(s, 1 - v)
+                HueCursor.Position = UDim2.fromScale(h, 0)
+            end
+            HexInput.FocusLost:Connect(function()
+                local success, result = pcall(Color3.fromHex, HexInput.Text)
+                if success then local nh, ns, nv = Color3.toHSV(result) h, s, v = nh, ns, nv UpdateColor(true) else HexInput.Text = "#" .. currentColor:ToHex():upper() end
+            end)
+            local draggingSV = false
+            SVMap.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = true end end)
+            local draggingHue = false
+            HueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end end)
+            UserInputService.InputChanged:Connect(function(input)
+                if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local pos = Vector2.new(math.clamp((input.Position.X - SVMap.AbsolutePosition.X) / SVMap.AbsoluteSize.X, 0, 1), math.clamp((input.Position.Y - SVMap.AbsolutePosition.Y) / SVMap.AbsoluteSize.Y, 0, 1))
+                    s = pos.X v = 1 - pos.Y UpdateColor()
+                elseif draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    h = math.clamp((input.Position.X - HueSlider.AbsolutePosition.X) / HueSlider.AbsoluteSize.X, 0, 1) UpdateColor()
+                end
+            end)
+            UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false draggingHue = false end end)
+            local function TogglePanel(state)
+                if state then originalColor = currentColor OldColorPreview.BackgroundColor3 = originalColor Overlay.Visible = true TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
+                else TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() task.delay(0.3, function() Overlay.Visible = false end) end
+            end
+            ApplyBtn.MouseButton1Click:Connect(function() ColorSquare.BackgroundColor3 = currentColor callback(currentColor) TogglePanel(false) end)
+            ColorSquare.MouseButton1Click:Connect(function() TogglePanel(true) end)
+        end
+ 
+    return Elements
     end
-
     return Window
 end
-
+ 
 return AstralLib
