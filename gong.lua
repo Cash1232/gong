@@ -5,40 +5,41 @@ local UserInputService = game:GetService("UserInputService")
 local StarterGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
- 
+local InsertService = game:GetService("InsertService")
+
+-- Check for executor's request function
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
- 
+
 local AstralLib = {}
- 
+
+-- // THEME CONFIGURATION
 local Theme = {
-    Background = Color3.fromRGB(12, 12, 14),
-    Card = Color3.fromRGB(18, 18, 22),
-    IconBg = Color3.fromRGB(25, 25, 30),
-    Border = Color3.fromRGB(35, 35, 40),
+    Background = Color3.fromRGB(18, 18, 20),
+    Card = Color3.fromRGB(24, 24, 28),
+    IconBg = Color3.fromRGB(32, 32, 35),
+    Border = Color3.fromRGB(45, 45, 48),
     Accent = Color3.fromRGB(0, 122, 255),
-    Purple = Color3.fromRGB(190, 0, 255),
+    Purple = Color3.fromRGB(100, 80, 255),
     TextPrimary = Color3.fromRGB(255, 255, 255),
-    TextSec = Color3.fromRGB(160, 160, 165),
-    Knob = Color3.fromRGB(255, 255, 255),
-    Success = Color3.fromRGB(50, 255, 100),
-    Danger = Color3.fromRGB(255, 50, 50)
+    TextSec = Color3.fromRGB(150, 150, 150),
+    Knob = Color3.fromRGB(255, 255, 255)
 }
- 
-if CoreGui:FindFirstChild("Astral_UI_V10") then
-    CoreGui.Astral_UI_V10:Destroy()
+
+local LockIconID = "rbxassetid://17783082088"
+
+if CoreGui:FindFirstChild("Astral_UI_V9") then
+    CoreGui.Astral_UI_V9:Destroy()
 end
- 
-local function Corner(radius, parent)
+
+-- // INTERNAL HELPERS
+local function Corner(radius: number, parent: Instance)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, radius)
     c.Parent = parent
     return c
 end
- 
-local function Stroke(color, thickness, parent)
+
+local function Stroke(color: Color3, thickness: number, parent: Instance)
     local s = Instance.new("UIStroke")
     s.Color = color
     s.Thickness = thickness
@@ -46,19 +47,31 @@ local function Stroke(color, thickness, parent)
     s.Parent = parent
     return s
 end
- 
-local function MakeDraggable(UIElement)
+
+-- // CUSTOM IMAGE HANDLER (FIXED CACHING)
+local function GetIconOnWeb(url)
+    local success, result = pcall(function()
+        local fileName = "Astral_BG_" .. math.floor(tick()) .. ".png"
+        local content = game:HttpGet(url)
+        writefile(fileName, content)
+        return getcustomasset(fileName)
+    end)
+    return success and result or nil
+end
+
+-- // DRAGGING HANDLER
+local function MakeDraggable(UIElement: GuiObject)
     local dragging = false
     local dragInput
     local dragStart
     local startPos
- 
+
     UIElement.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = UIElement.Position
- 
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -66,13 +79,13 @@ local function MakeDraggable(UIElement)
             end)
         end
     end)
- 
+
     UIElement.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
- 
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
@@ -80,24 +93,79 @@ local function MakeDraggable(UIElement)
         end
     end)
 end
- 
+
 function AstralLib:CreateWindow(titleText, versionText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "Astral_UI_V10"
+    ScreenGui.Name = "Astral_UI_V9"
     ScreenGui.Parent = CoreGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
- 
+
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 795, 0, 532)
     MainFrame.Position = UDim2.new(0.5, -397, 0.5, -266)
     MainFrame.BackgroundColor3 = Theme.Background
+    MainFrame.BackgroundTransparency = 0
     MainFrame.BorderSizePixel = 0
     MainFrame.ClipsDescendants = true
     MainFrame.Parent = ScreenGui
     Corner(10, MainFrame)
     Stroke(Theme.Border, 1, MainFrame)
- 
+
+    local MainBGImage = Instance.new("ImageLabel")
+    MainBGImage.Name = "MainBGImage"
+    MainBGImage.Size = UDim2.fromScale(1, 1)
+    MainBGImage.BackgroundTransparency = 1
+    MainBGImage.Image = ""
+    MainBGImage.ScaleType = Enum.ScaleType.Crop
+    MainBGImage.ZIndex = 0
+    MainBGImage.Parent = MainFrame
+
+    local ThemeRegistry = {
+        Accents = {},
+        Tabs = {},
+        TickButtons = {} 
+    }
+
+    local Arrows = Instance.new("TextLabel") 
+
+    local function UpdateArrows(color)
+        local hex = color:ToHex()
+        Arrows.Text = string.format([[<font color="#FFFFFF">>></font> <font color="#%s">>></font> <font color="#FFFFFF">>></font> <font color="#%s">>></font> <font color="#FFFFFF">>></font> <font color="#%s">>></font> <font color="#FFFFFF">>></font> <font color="#%s">>></font>]], hex, hex, hex, hex)
+    end
+
+    local Title = Instance.new("TextLabel")
+    local function UpdateTitleColor(color)
+        local hex = color:ToHex()
+        Title.Text = string.format([[Astral <font color="#%s">Hub</font>]], hex)
+    end
+
+    local function UpdateTheme(newColor)
+        Theme.Accent = newColor
+        UpdateTitleColor(newColor)
+        UpdateArrows(newColor)
+        
+        for _, obj in ipairs(ThemeRegistry.Accents) do
+            if obj:IsA("Frame") or obj:IsA("TextButton") then
+                obj.BackgroundColor3 = newColor
+            elseif obj:IsA("TextLabel") then
+                if obj.Name == "AccentText" then
+                    obj.TextColor3 = newColor
+                end
+            elseif obj:IsA("UIStroke") then
+                obj.Color = newColor
+            elseif obj:IsA("ScrollingFrame") then
+                obj.ScrollBarImageColor3 = newColor
+            end
+        end
+
+        for _, data in ipairs(ThemeRegistry.TickButtons) do
+            if data.GetChecked() then
+                data.Instance.BackgroundColor3 = newColor
+            end
+        end
+    end
+
     local MinimizeBtn = Instance.new("ImageButton")
     MinimizeBtn.Name = "MinimizeButton"
     MinimizeBtn.Size = UDim2.new(0, 75, 0, 75)
@@ -107,11 +175,12 @@ function AstralLib:CreateWindow(titleText, versionText)
     MinimizeBtn.Active = true
     MinimizeBtn.Parent = ScreenGui
     Corner(100, MinimizeBtn)
-    Stroke(Theme.Accent, 2, MinimizeBtn)
+    local MinStroke = Stroke(Theme.Accent, 2, MinimizeBtn)
+    table.insert(ThemeRegistry.Accents, MinStroke)
     
     local MinScale = Instance.new("UIScale", MinimizeBtn)
     MakeDraggable(MinimizeBtn)
- 
+
     local StopTweenBtn = Instance.new("TextButton")
     StopTweenBtn.Name = "StopTweenButton"
     StopTweenBtn.Size = UDim2.new(0, 75, 0, 75)
@@ -125,20 +194,21 @@ function AstralLib:CreateWindow(titleText, versionText)
     StopTweenBtn.Active = true
     StopTweenBtn.Parent = ScreenGui
     Corner(100, StopTweenBtn)
-    Stroke(Theme.Accent, 2, StopTweenBtn)
+    local StopStroke = Stroke(Theme.Accent, 2, StopTweenBtn)
+    table.insert(ThemeRegistry.Accents, StopStroke)
     
     local StopScale = Instance.new("UIScale", StopTweenBtn)
     MakeDraggable(StopTweenBtn)
- 
+
     local clickStartPos = Vector2.zero
- 
+
     MinimizeBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             clickStartPos = Vector2.new(input.Position.X, input.Position.Y)
             TweenService:Create(MinScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 0.85}):Play()
         end
     end)
- 
+
     MinimizeBtn.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             TweenService:Create(MinScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
@@ -149,19 +219,19 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
     end)
- 
+
     StopTweenBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 0.85}):Play()
         end
     end)
- 
+
     StopTweenBtn.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
         end
     end)
- 
+
     local ResizeHandle = Instance.new("TextButton")
     ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
     ResizeHandle.Position = UDim2.new(1, -20, 1, -20)
@@ -169,11 +239,11 @@ function AstralLib:CreateWindow(titleText, versionText)
     ResizeHandle.Text = ""
     ResizeHandle.ZIndex = 100
     ResizeHandle.Parent = MainFrame
- 
+
     local resizing = false
-    local resizeStartPos
-    local resizeStartSize
- 
+    local resizeStartPos: Vector3
+    local resizeStartSize: Vector2
+
     ResizeHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             resizing = true
@@ -186,7 +256,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
         end
     end)
- 
+
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if resizing then
@@ -197,14 +267,13 @@ function AstralLib:CreateWindow(titleText, versionText)
             end
         end
     end)
- 
+
     local TopBar = Instance.new("Frame")
     TopBar.Size = UDim2.new(1, 0, 0, 50)
     TopBar.BackgroundTransparency = 1
     TopBar.Parent = MainFrame
- 
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(0, 110, 1, 0)
+
+    Title.Size = UDim2.new(0, 150, 1, 0)
     Title.Position = UDim2.new(0, 50, 0, 0)
     Title.BackgroundTransparency = 1
     Title.RichText = true
@@ -214,7 +283,7 @@ function AstralLib:CreateWindow(titleText, versionText)
     Title.TextSize = 19
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TopBar
- 
+
     local SidebarToggle = Instance.new("ImageButton")
     SidebarToggle.Size = UDim2.new(0, 24, 0, 24)
     SidebarToggle.Position = UDim2.new(0, 15, 0.5, -12)
@@ -222,7 +291,7 @@ function AstralLib:CreateWindow(titleText, versionText)
     SidebarToggle.Image = "rbxassetid://96304569438872"
     SidebarToggle.ImageColor3 = Theme.TextPrimary
     SidebarToggle.Parent = TopBar
- 
+
     local function CreateBadge(text, bgColor, textColor, parent)
         local Badge = Instance.new("Frame")
         Badge.BackgroundColor3 = bgColor
@@ -245,11 +314,11 @@ function AstralLib:CreateWindow(titleText, versionText)
         Label.Parent = Badge
         return Badge
     end
- 
+
     local ActiveBadge = CreateBadge("BETA", Theme.Accent, Theme.TextPrimary, TopBar)
     ActiveBadge.Position = UDim2.new(0, 155, 0.5, -12)
- 
-    local Arrows = Instance.new("TextLabel")
+    table.insert(ThemeRegistry.Accents, ActiveBadge)
+
     Arrows.Size = UDim2.new(0, 350, 1, 0)
     Arrows.Position = UDim2.new(0, 240, 0, 0)
     Arrows.BackgroundTransparency = 1
@@ -260,30 +329,13 @@ function AstralLib:CreateWindow(titleText, versionText)
     Arrows.TextSize = 16
     Arrows.TextXAlignment = Enum.TextXAlignment.Left
     Arrows.Parent = TopBar
- 
-    local MinBtn = Instance.new("TextButton")
-    MinBtn.Size = UDim2.new(0, 30, 0, 30)
-    MinBtn.Position = UDim2.new(1, -40, 0.5, -15)
-    MinBtn.BackgroundTransparency = 1
-    MinBtn.Text = "—"
-    MinBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-    MinBtn.Font = Enum.Font.GothamBold
-    MinBtn.TextSize = 14
-    MinBtn.Parent = TopBar
- 
-    MinBtn.MouseButton1Click:Connect(function()
-        MainFrame.Visible = false
-        pcall(function()
-            StarterGui:SetCore("SendNotification", {Title = "Astral Hub", Text = "UI Minimized. Use the logo button to restore.", Duration = 3})
-        end)
-    end)
- 
+
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not gameProcessed and input.KeyCode == Enum.KeyCode.RightControl then
             MainFrame.Visible = not MainFrame.Visible
         end
     end)
- 
+
     local dragging, dragInput, dragStart, startPos
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -302,21 +354,21 @@ function AstralLib:CreateWindow(titleText, versionText)
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
- 
+
     local Line = Instance.new("Frame")
     Line.Size = UDim2.new(1, 0, 0, 1)
     Line.Position = UDim2.new(0, 0, 0, 50)
     Line.BackgroundColor3 = Theme.Border
     Line.BorderSizePixel = 0
     Line.Parent = MainFrame
- 
+
     local VLine = Instance.new("Frame")
     VLine.Size = UDim2.new(0, 1, 1, -50)
     VLine.Position = UDim2.new(0, 180, 0, 50)
     VLine.BackgroundColor3 = Theme.Border
     VLine.BorderSizePixel = 0
     VLine.Parent = MainFrame
- 
+
     local Sidebar = Instance.new("ScrollingFrame")
     Sidebar.Size = UDim2.new(0, 175, 1, -50)
     Sidebar.Position = UDim2.new(0, 0, 0, 50)
@@ -324,22 +376,22 @@ function AstralLib:CreateWindow(titleText, versionText)
     Sidebar.BorderSizePixel = 0
     Sidebar.ScrollBarThickness = 0
     Sidebar.Parent = MainFrame
- 
+
     local SidebarLayout = Instance.new("UIListLayout")
     SidebarLayout.Padding = UDim.new(0, 6)
     SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SidebarLayout.Parent = Sidebar
     Instance.new("UIPadding", Sidebar).PaddingTop = UDim.new(0, 15)
- 
+
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Size = UDim2.new(1, -180, 1, -50)
     ContentContainer.Position = UDim2.new(0, 180, 0, 50)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
- 
-    local Window = { CurrentTab = nil, AllTabs = {}, SidebarExpanded = true }
- 
+
+    local Window = { CurrentTab = nil, AllTabs = {}, SidebarExpanded = true, MainFrame = MainFrame, MainBG = MainBGImage }
+
     SidebarToggle.MouseButton1Click:Connect(function()
         Window.SidebarExpanded = not Window.SidebarExpanded
         local targetSidebarWidth = Window.SidebarExpanded and 175 or 60
@@ -350,13 +402,34 @@ function AstralLib:CreateWindow(titleText, versionText)
         TweenService:Create(VLine, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = UDim2.new(0, targetContentPos, 0, 50)}):Play()
         TweenService:Create(ContentContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = UDim2.new(0, targetContentPos, 0, 50), Size = UDim2.new(1, targetContentSize, 1, -50)}):Play()
         TweenService:Create(SidebarToggle, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Rotation = Window.SidebarExpanded and 0 or 180}):Play()
- 
+
         for _, tab in ipairs(Window.AllTabs) do
-            TweenService:Create(tab.Btn, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(0, Window.SidebarExpanded and 155 or 45, 0, 40)}):Play()
+            local targetBtnWidth = Window.SidebarExpanded and 155 or 45
+            TweenService:Create(tab.Btn, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(0, targetBtnWidth, 0, 40)}):Play()
             TweenService:Create(tab.Text, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {TextTransparency = Window.SidebarExpanded and 0 or 1}):Play()
+            
+            local icon = tab.Bg:FindFirstChild("TabIcon")
+            if icon then
+                TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = Window.SidebarExpanded and UDim2.new(0, 12, 0.5, -9) or UDim2.new(0.5, -9, 0.5, -9)}):Play()
+            end
         end
     end)
- 
+
+    function Window:UpdateAccent(color)
+        Theme.Accent = color
+        UpdateTheme(color)
+        for _, t in ipairs(Window.AllTabs) do
+            if t.Content.Visible then
+                t.Bg.BackgroundColor3 = color
+            end
+            t.Content.ScrollBarImageColor3 = color
+        end
+    end
+
+    function Window:UpdateMainColor(color)
+        MainFrame.BackgroundColor3 = color
+    end
+
     function Window:MakeTabSection(name)
         local Sec = Instance.new("TextLabel")
         Sec.Size = UDim2.new(1, -20, 0, 30)
@@ -372,15 +445,11 @@ function AstralLib:CreateWindow(titleText, versionText)
         
         task.spawn(function()
             while task.wait(0.1) do
-                if Sec and Sec.Parent then
-                    Sec.Visible = Window.SidebarExpanded
-                else
-                    break
-                end
+                Sec.Visible = Window.SidebarExpanded
             end
         end)
     end
- 
+
     function Window:MakeTab(tabName, iconId)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size = UDim2.new(0, 155, 0, 40)
@@ -388,14 +457,14 @@ function AstralLib:CreateWindow(titleText, versionText)
         TabBtn.Text = ""
         TabBtn.LayoutOrder = #Sidebar:GetChildren()
         TabBtn.Parent = Sidebar
- 
+
         local TabBg = Instance.new("Frame")
         TabBg.Size = UDim2.new(1, 0, 1, 0)
         TabBg.BackgroundColor3 = Color3.fromRGB(32, 32, 35)
         TabBg.Parent = TabBtn
         Corner(8, TabBg)
         local TabStroke = Stroke(Color3.fromRGB(50, 50, 55), 1, TabBg)
- 
+
         local TabGradient = Instance.new("UIGradient")
         TabGradient.Transparency = NumberSequence.new({
             NumberSequenceKeypoint.new(0, 0),
@@ -405,7 +474,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         })
         TabGradient.Enabled = false
         TabGradient.Parent = TabBg
- 
+
         local textOffsetX = 15
         if iconId then
             local Icon = Instance.new("ImageLabel")
@@ -418,7 +487,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             Icon.Parent = TabBg
             textOffsetX = 40
         end
- 
+
         local TabText = Instance.new("TextLabel")
         TabText.Size = UDim2.new(1, -textOffsetX, 1, 0)
         TabText.Position = UDim2.new(0, textOffsetX, 0, 0)
@@ -430,7 +499,7 @@ function AstralLib:CreateWindow(titleText, versionText)
         TabText.TextXAlignment = Enum.TextXAlignment.Left
         TabText.ClipsDescendants = true
         TabText.Parent = TabBg
- 
+
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Size = UDim2.new(1, 0, 1, 0)
         TabContent.BackgroundTransparency = 1
@@ -438,55 +507,62 @@ function AstralLib:CreateWindow(titleText, versionText)
         TabContent.ScrollBarImageColor3 = Theme.Accent
         TabContent.Visible = false
         TabContent.Parent = ContentContainer
- 
+        table.insert(ThemeRegistry.Accents, TabContent)
+
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.Padding = UDim.new(0, 10)
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Parent = TabContent
- 
+
         local ContentPadding = Instance.new("UIPadding")
         ContentPadding.PaddingLeft = UDim.new(0, 20); ContentPadding.PaddingRight = UDim.new(0, 20)
         ContentPadding.PaddingTop = UDim.new(0, 15); ContentPadding.PaddingBottom = UDim.new(0, 20)
         ContentPadding.Parent = TabContent
- 
-        local ColumnsContainer = Instance.new("Frame")
-        ColumnsContainer.Name = "ColumnsContainer"
-        ColumnsContainer.Size = UDim2.new(1, 0, 0, 0)
-        ColumnsContainer.BackgroundTransparency = 1
-        ColumnsContainer.AutomaticSize = Enum.AutomaticSize.Y
-        ColumnsContainer.LayoutOrder = 999
-        ColumnsContainer.Parent = TabContent
- 
-        local LeftColumn = Instance.new("Frame")
-        LeftColumn.Name = "LeftColumn"
-        LeftColumn.Size = UDim2.new(0.5, -7, 0, 0)
-        LeftColumn.AutomaticSize = Enum.AutomaticSize.Y
-        LeftColumn.BackgroundTransparency = 1
-        LeftColumn.Parent = ColumnsContainer
- 
-        local RightColumn = Instance.new("Frame")
-        RightColumn.Name = "RightColumn"
-        RightColumn.Size = UDim2.new(0.5, -7, 0, 0)
-        RightColumn.Position = UDim2.new(0.5, 7, 0, 0)
-        RightColumn.AutomaticSize = Enum.AutomaticSize.Y
-        RightColumn.BackgroundTransparency = 1
-        RightColumn.Parent = ColumnsContainer
- 
-        local LList = Instance.new("UIListLayout", LeftColumn)
-        LList.Padding = UDim.new(0, 15); LList.SortOrder = Enum.SortOrder.LayoutOrder
-        local RList = Instance.new("UIListLayout", RightColumn)
-        RList.Padding = UDim.new(0, 15); RList.SortOrder = Enum.SortOrder.LayoutOrder
- 
-        local function UpdateCanvas()
-            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 50)
+
+        local currentLeftColumn = nil
+        local currentRightColumn = nil
+
+        local function CreateNewColumns()
+            local ColumnsContainer = Instance.new("Frame")
+            ColumnsContainer.Name = "ColumnsContainer"
+            ColumnsContainer.Size = UDim2.new(1, 0, 0, 0)
+            ColumnsContainer.BackgroundTransparency = 1
+            ColumnsContainer.AutomaticSize = Enum.AutomaticSize.Y
+            ColumnsContainer.LayoutOrder = #TabContent:GetChildren() + 1
+            ColumnsContainer.Parent = TabContent
+
+            local LeftColumn = Instance.new("Frame")
+            LeftColumn.Name = "LeftColumn"
+            LeftColumn.Size = UDim2.new(0.5, -7, 0, 0)
+            LeftColumn.AutomaticSize = Enum.AutomaticSize.Y
+            LeftColumn.BackgroundTransparency = 1
+            LeftColumn.Parent = ColumnsContainer
+
+            local RightColumn = Instance.new("Frame")
+            RightColumn.Name = "RightColumn"
+            RightColumn.Size = UDim2.new(0.5, -7, 0, 0)
+            RightColumn.Position = UDim2.new(0.5, 7, 0, 0)
+            RightColumn.AutomaticSize = Enum.AutomaticSize.Y
+            RightColumn.BackgroundTransparency = 1
+            RightColumn.Parent = ColumnsContainer
+
+            local LList = Instance.new("UIListLayout", LeftColumn)
+            LList.Padding = UDim.new(0, 15); LList.SortOrder = Enum.SortOrder.LayoutOrder
+            local RList = Instance.new("UIListLayout", RightColumn)
+            RList.Padding = UDim.new(0, 15); RList.SortOrder = Enum.SortOrder.LayoutOrder
+            
+            currentLeftColumn = LeftColumn
+            currentRightColumn = RightColumn
         end
- 
-        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
-        LList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
-        RList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
- 
+
+        CreateNewColumns()
+
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 30)
+        end)
+
         table.insert(Window.AllTabs, {Btn = TabBtn, Bg = TabBg, Text = TabText, Content = TabContent, Gradient = TabGradient, Stroke = TabStroke})
- 
+
         local function SelectTab()
             for _, t in ipairs(Window.AllTabs) do
                 t.Content.Visible = false
@@ -500,45 +576,102 @@ function AstralLib:CreateWindow(titleText, versionText)
             TabContent.Visible = true
             TabGradient.Enabled = true
             TabStroke.Enabled = false
-            TweenService:Create(TabBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 80, 160)}):Play()
+            TweenService:Create(TabBg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Accent}):Play()
             TweenService:Create(TabText, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
             local activeIcon = TabBg:FindFirstChild("TabIcon")
             if activeIcon then TweenService:Create(activeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end
-            UpdateCanvas()
         end
- 
+
         TabBtn.MouseButton1Click:Connect(SelectTab)
         if not Window.CurrentTab then Window.CurrentTab = TabContent; SelectTab() end
- 
+
         local Elements = {}
         local elementOrder = 0
- 
+
+        local function ApplyLocking(parent: Frame)
+            local LockOverlay = Instance.new("Frame")
+            LockOverlay.Name = "LockOverlay"
+            LockOverlay.Size = UDim2.fromScale(1, 1)
+            LockOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+            LockOverlay.BackgroundTransparency = 0.35
+            LockOverlay.ZIndex = 100
+            LockOverlay.Visible = false
+            LockOverlay.Active = true
+            LockOverlay.Parent = parent
+            Corner(10, LockOverlay)
+
+            local Container = Instance.new("Frame")
+            Container.Size = UDim2.fromScale(1, 1)
+            Container.BackgroundTransparency = 1
+            Container.Parent = LockOverlay
+
+            local Layout = Instance.new("UIListLayout")
+            Layout.FillDirection = Enum.FillDirection.Horizontal
+            Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+            Layout.Padding = UDim.new(0, 8)
+            Layout.Parent = Container
+
+            local Icon = Instance.new("ImageLabel")
+            Icon.Size = UDim2.fromOffset(24, 24)
+            Icon.BackgroundTransparency = 1
+            Icon.Image = LockIconID
+            Icon.ImageColor3 = Color3.new(1, 1, 1)
+            Icon.Parent = Container
+
+            local Text = Instance.new("TextLabel")
+            Text.Text = "Locked"
+            Text.Font = Enum.Font.GothamBold
+            Text.TextSize = 16
+            Text.TextColor3 = Color3.new(1, 1, 1)
+            Text.BackgroundTransparency = 1
+            Text.AutomaticSize = Enum.AutomaticSize.XY
+            Text.Parent = Container
+
+            return {
+                SetLocked = function(self, state: boolean)
+                    LockOverlay.Visible = state
+                end
+            }
+        end
+
         function Elements:AddContentSection(name)
             elementOrder = elementOrder + 1
+            local SecFrame = Instance.new("Frame")
+            SecFrame.Size = UDim2.new(1, 0, 0, 45)
+            SecFrame.BackgroundTransparency = 1
+            SecFrame.LayoutOrder = elementOrder
+            SecFrame.Parent = TabContent
+            
             local Sec = Instance.new("TextLabel")
             Sec.Size = UDim2.new(1, 0, 0, 35)
+            Sec.Position = UDim2.new(0, 0, 0, 10)
             Sec.BackgroundTransparency = 1
             Sec.Text = name
             Sec.TextColor3 = Color3.fromRGB(220, 220, 220)
             Sec.Font = Enum.Font.GothamBold
             Sec.TextSize = 16
             Sec.TextXAlignment = Enum.TextXAlignment.Left
-            Sec.LayoutOrder = elementOrder
-            Sec.Parent = TabContent
+            Sec.Parent = SecFrame
+            
             local SecLine = Instance.new("Frame")
             SecLine.Size = UDim2.new(1, 0, 0, 1)
-            SecLine.Position = UDim2.new(0, 0, 1, -5)
+            SecLine.Position = UDim2.new(0, 0, 1, -2)
             SecLine.BackgroundColor3 = Theme.Border
             SecLine.BorderSizePixel = 0
             SecLine.Parent = Sec
+            
+            CreateNewColumns()
+            elementOrder = elementOrder + 1
         end
- 
-        function Elements:AddParagraph(title, content)
+
+        function Elements:AddParagraph(title: string, content: string)
             elementOrder = elementOrder + 1
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, -5, 0, 0)
             frame.AutomaticSize = Enum.AutomaticSize.Y
             frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
             frame.LayoutOrder = elementOrder
             frame.Parent = TabContent
             Corner(10, frame)
@@ -567,13 +700,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             c.TextXAlignment = Enum.TextXAlignment.Left
             c.TextWrapped = true
             c.Parent = frame
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddPreview(title, content)
+
+        function Elements:AddPreview(title: string, content: string)
             elementOrder = elementOrder + 1
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, -5, 0, 140)
             frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
             frame.LayoutOrder = elementOrder
             frame.Parent = TabContent
             Corner(10, frame)
@@ -615,16 +750,166 @@ function AstralLib:CreateWindow(titleText, versionText)
             c.BackgroundTransparency = 1
             c.TextXAlignment = Enum.TextXAlignment.Left
             c.Parent = frame
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddStatusCard(title, status, imageId, statusColor, side)
+
+        function Elements:AddModelPreview(title: string, btnText: string, side: string?, modelSource: () -> Instance?)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 320)
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+
+            local TitleLabel = Instance.new("TextLabel")
+            TitleLabel.Size = UDim2.new(1, -20, 0, 25)
+            TitleLabel.Position = UDim2.new(0, 10, 0, 8)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Text = title
+            TitleLabel.TextColor3 = Theme.TextPrimary
+            TitleLabel.Font = Enum.Font.GothamBold
+            TitleLabel.TextSize = 14
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.Parent = frame
+
+            local ViewportContainer = Instance.new("Frame")
+            ViewportContainer.Size = UDim2.new(1, -20, 0, 200)
+            ViewportContainer.Position = UDim2.new(0, 10, 0, 35)
+            ViewportContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+            ViewportContainer.Parent = frame
+            Corner(8, ViewportContainer)
+            Stroke(Theme.Border, 1, ViewportContainer)
+
+            local Viewport = Instance.new("ViewportFrame")
+            Viewport.Size = UDim2.fromScale(1, 1)
+            Viewport.BackgroundTransparency = 1
+            Viewport.Parent = ViewportContainer
+
+            local Camera = Instance.new("Camera")
+            Camera.FieldOfView = 50
+            Viewport.CurrentCamera = Camera
+            Viewport.Visible = true
+
+            local currentModel: Model? = nil
+            local rotationX, rotationY = 0, 0
+            local zoomDist = 10
+            local oldMin, oldMax = 0.5, 400
+
+            ViewportContainer.MouseEnter:Connect(function() 
+                TabContent.ScrollingEnabled = false 
+                local lp = Players.LocalPlayer
+                if lp then
+                    oldMin, oldMax = lp.CameraMinZoomDistance, lp.CameraMaxZoomDistance
+                    local dist = (workspace.CurrentCamera.CFrame.Position - workspace.CurrentCamera.Focus.Position).Magnitude
+                    lp.CameraMinZoomDistance = dist
+                    lp.CameraMaxZoomDistance = dist
+                end
+            end)
+            
+            ViewportContainer.MouseLeave:Connect(function() 
+                TabContent.ScrollingEnabled = true 
+                local lp = Players.LocalPlayer
+                if lp then
+                    lp.CameraMinZoomDistance = oldMin
+                    lp.CameraMaxZoomDistance = oldMax
+                end
+            end)
+
+            local function UpdateCamera()
+                if not currentModel then return end
+                local center = currentModel:GetModelCFrame().Position
+                local rotation = CFrame.Angles(0, math.rad(rotationX), 0) * CFrame.Angles(math.rad(rotationY), 0, 0)
+                Camera.CFrame = CFrame.new(center) * rotation * CFrame.new(0, 0, zoomDist)
+                Camera.Focus = CFrame.new(center)
+            end
+
+            local dragging = false
+            local lastPos = Vector2.zero
+
+            Viewport.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    lastPos = input.Position
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = input.Position - lastPos
+                    rotationX -= delta.X
+                    rotationY = math.clamp(rotationY - delta.Y, -80, 80)
+                    lastPos = input.Position
+                    UpdateCamera()
+                elseif input.UserInputType == Enum.UserInputType.MouseWheel then
+                    local zoomStep = zoomDist * 0.15
+                    zoomDist = math.clamp(zoomDist - (input.Position.Z * zoomStep), 0.5, 500)
+                    UpdateCamera()
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+
+            local ButtonGrid = Instance.new("Frame")
+            ButtonGrid.Size = UDim2.new(1, -20, 0, 45)
+            ButtonGrid.Position = UDim2.new(0, 10, 1, -65)
+            ButtonGrid.BackgroundTransparency = 1
+            ButtonGrid.Parent = frame
+
+            local Grid = Instance.new("UIGridLayout")
+            Grid.CellSize = UDim2.new(0.5, -5, 0, 45)
+            Grid.CellPadding = UDim2.new(0, 10, 0, 10)
+            Grid.Parent = ButtonGrid
+
+            local function CreateVBtn(text, color)
+                local b = Instance.new("TextButton")
+                b.BackgroundColor3 = color
+                b.Text = text
+                b.Font = Enum.Font.GothamBold
+                b.TextColor3 = Color3.new(1, 1, 1)
+                b.TextSize = 12
+                b.TextWrapped = true
+                b.Parent = ButtonGrid
+                Corner(6, b)
+                return b
+            end
+
+            local LoadBtn = CreateVBtn(btnText:upper(), Color3.fromRGB(76, 175, 80))
+            local UnloadBtn = CreateVBtn("UNLOAD", Color3.fromRGB(211, 47, 47))
+
+            local function LoadModel()
+                if currentModel then currentModel:Destroy() end
+                
+                local target = modelSource()
+
+                if target then
+                    currentModel = target:Clone()
+                    currentModel.Parent = Viewport
+                    local cf, size = currentModel:GetBoundingBox()
+                    zoomDist = size.Magnitude * 1.5
+                    UpdateCamera()
+                end
+            end
+
+            LoadBtn.MouseButton1Click:Connect(LoadModel)
+            UnloadBtn.MouseButton1Click:Connect(function() if currentModel then currentModel:Destroy() currentModel = nil end end)
+
+            return ApplyLocking(frame)
+        end
+
+        function Elements:AddStatusCard(title: string, status: string, imageId: string, statusColor: Color3, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
- 
+
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
@@ -632,7 +917,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
             Corner(10, ibg)
- 
+
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.95, 0.95)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -640,7 +925,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Image = imageId
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
- 
+
             local label = Instance.new("TextLabel")
             label.Text = title
             label.Font = Enum.Font.GothamBold
@@ -651,15 +936,17 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
- 
+
             local statusContainer = Instance.new("Frame")
             statusContainer.Size = UDim2.new(1, -92, 0, 15)
             statusContainer.Position = UDim2.new(0, 82, 0.5, 10)
             statusContainer.AnchorPoint = Vector2.new(0, 0.5)
             statusContainer.BackgroundTransparency = 1
             statusContainer.Parent = frame
- 
+
             local statusLabel = Instance.new("TextLabel")
             statusLabel.Text = "Status: "
             statusLabel.Font = Enum.Font.GothamMedium
@@ -669,7 +956,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             statusLabel.TextXAlignment = Enum.TextXAlignment.Left
             statusLabel.BackgroundTransparency = 1
             statusLabel.Parent = statusContainer
- 
+
             local dot = Instance.new("Frame")
             dot.Size = UDim2.fromOffset(8, 8)
             dot.Position = UDim2.new(0, 44, 0.5, 0)
@@ -677,7 +964,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             dot.BackgroundColor3 = statusColor
             dot.Parent = statusContainer
             Corner(8, dot)
- 
+
             local statusText = Instance.new("TextLabel")
             statusText.Text = status
             statusText.Font = Enum.Font.GothamMedium
@@ -688,13 +975,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             statusText.TextXAlignment = Enum.TextXAlignment.Left
             statusText.BackgroundTransparency = 1
             statusText.Parent = statusContainer
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddLabel(title, content, iconId, side)
+
+        function Elements:AddLabel(title: string, content: string, iconId: string, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local ibg = Instance.new("Frame")
@@ -721,6 +1010,8 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local subLabel = Instance.new("TextLabel")
             subLabel.Text = content
@@ -732,17 +1023,21 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.Size = UDim2.new(1, -92, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
             subLabel.BackgroundTransparency = 1
+            subLabel.TextWrapped = true
+            subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
+            return ApplyLocking(frame)
         end
- 
+
         function Elements:AddBanner(titleText, descText, bannerId, inviteCode)
             elementOrder = elementOrder + 1
-            local InviteCode = inviteCode or "bbHJmq6YCs"
+            local InviteCode = inviteCode or "KMrYpKMXCQ"
             local BannerID = bannerId or "rbxassetid://127861212431489"
             local ServerIconID = "rbxassetid://106987676739927"
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, -5, 0, 175)
             frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+            frame.BackgroundTransparency = 0.15
             frame.BorderSizePixel = 0
             frame.LayoutOrder = elementOrder
             frame.Parent = TabContent
@@ -834,34 +1129,71 @@ function AstralLib:CreateWindow(titleText, versionText)
             Corner(6, btn)
             task.spawn(function()
                 if httpRequest then
-                    pcall(function()
-                        local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
-                        if res.StatusCode == 200 then
-                            local data = HttpService:JSONDecode(res.Body)
-                            onlineCount.Text = (data.approximate_presence_count or 0) .. " Online"
-                            memberCount.Text = (data.approximate_member_count or 0) .. " Members"
-                            if data.guild and data.guild.description and data.guild.description ~= "" then desc.Text = data.guild.description end
-                        end
-                    end)
+                    local res = httpRequest({ Url = "https://discord.com/api/v9/invites/" .. InviteCode .. "?with_counts=true", Method = "GET" })
+                    if res.StatusCode == 200 then
+                        local data = HttpService:JSONDecode(res.Body)
+                        onlineCount.Text = (data.approximate_presence_count or 0) .. " Online"
+                        memberCount.Text = (data.approximate_member_count or 0) .. " Members"
+                        if data.guild and data.guild.description and data.guild.description ~= "" then desc.Text = data.guild.description end
+                    end
                 end
             end)
             btn.MouseButton1Click:Connect(function()
-                if setclipboard then setclipboard("https://discord.gg/" .. InviteCode) end
+                local INVITE_LINK = "https://discord.gg/" .. InviteCode
+                
+                -- Copy to clipboard
+                pcall(function()
+                    if setclipboard then
+                        setclipboard(INVITE_LINK)
+                    end
+                end)
+
+                -- Notification
+                pcall(function()
+                    StarterGui:SetCore("SendNotification", {
+                        Title = "Discord",
+                        Text = "Invite copied to clipboard",
+                        Duration = 5
+                    })
+                end)
+
+                -- Discord RPC Request
+                pcall(function()
+                    if httpRequest then
+                        httpRequest({
+                            Url = "http://127.0.0.1:6463/rpc?v=1",
+                            Method = "POST",
+                            Headers = {
+                                ["Content-Type"] = "application/json",
+                                ["Origin"] = "https://discord.com"
+                            },
+                            Body = HttpService:JSONEncode({
+                                cmd = "INVITE_BROWSER",
+                                args = {
+                                    code = InviteCode
+                                },
+                                nonce = tostring(math.random(100000,999999))
+                            })
+                        })
+                    end
+                end)
+
                 btn.Text = "Copied!"
                 btn.BackgroundColor3 = Color3.fromRGB(65, 65, 70)
-                pcall(function() StarterGui:SetCore("OpenUrl", "https://discord.gg/" .. InviteCode) end)
                 task.wait(2)
                 btn.Text = "Join"
                 btn.BackgroundColor3 = Color3.fromRGB(35, 165, 90)
             end)
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddToggle(title, iconId, side, callback)
+
+        function Elements:AddToggle(title: string, iconId: string, side: string?, callback: (boolean) -> ())
             local isToggled = false
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local ibg = Instance.new("Frame")
@@ -885,9 +1217,11 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0.5, 0)
             label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -140, 0, 20)
+            label.Size = UDim2.new(1, -145, 0, 40)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0, 48, 0, 26)
@@ -897,6 +1231,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             btn.Text = ""
             btn.Parent = frame
             Corner(6, btn)
+            
             local knob = Instance.new("Frame")
             knob.Size = UDim2.new(0, 20, 0, 20)
             knob.Position = UDim2.new(0, 3, 0.5, 0)
@@ -904,240 +1239,98 @@ function AstralLib:CreateWindow(titleText, versionText)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = btn
             Corner(4, knob)
-            btn.MouseButton1Click:Connect(function()
-                isToggled = not isToggled
+
+            local function updateVisuals()
                 TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Position = isToggled and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)}):Play()
                 TweenService:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {BackgroundColor3 = isToggled and Theme.Accent or Theme.Border}):Play()
-                callback(isToggled)
-            end)
-        end
- 
-        function Elements:AddTick(title, iconId, default, side, callback)
-            local isToggled = default or false
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 65)
-            frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
- 
-            local ibg = Instance.new("Frame")
-            ibg.Size = UDim2.fromOffset(45, 45)
-            ibg.Position = UDim2.new(0, 10, 0.5, 0)
-            ibg.AnchorPoint = Vector2.new(0, 0.5)
-            ibg.BackgroundColor3 = Theme.IconBg
-            ibg.Parent = frame
-            Corner(8, ibg)
- 
-            local icon = Instance.new("ImageLabel")
-            icon.Size = UDim2.fromScale(0.65, 0.65)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.BackgroundTransparency = 1
-            icon.Image = iconId
-            icon.Parent = ibg
- 
-            local label = Instance.new("TextLabel")
-            label.Text = title
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 14
-            label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 65, 0.5, 0)
-            label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -110, 0, 20)
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.BackgroundTransparency = 1
-            label.Parent = frame
- 
-            local box = Instance.new("TextButton")
-            box.Size = UDim2.fromOffset(30, 30)
-            box.Position = UDim2.new(1, -15, 0.5, 0)
-            box.AnchorPoint = Vector2.new(1, 0.5)
-            box.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-            box.Text = ""
-            box.Parent = frame
-            Corner(6, box)
-            Stroke(Theme.Accent, 2, box)
- 
-            local check = Instance.new("ImageLabel")
-            check.Size = UDim2.fromScale(0.75, 0.75)
-            check.Position = UDim2.fromScale(0.5, 0.5)
-            check.AnchorPoint = Vector2.new(0.5, 0.5)
-            check.BackgroundTransparency = 1
-            check.Image = "rbxassetid://6353957304"
-            check.ImageColor3 = Theme.Success
-            check.ImageTransparency = isToggled and 0 or 1
-            check.Parent = box
- 
-            box.MouseButton1Click:Connect(function()
-                isToggled = not isToggled
-                TweenService:Create(check, TweenInfo.new(0.2), {ImageTransparency = isToggled and 0 or 1}):Play()
-                callback(isToggled)
-            end)
-        end
- 
-        function Elements:AddCombinTick(title, ticks, side)
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 0)
-            frame.AutomaticSize = Enum.AutomaticSize.Y
-            frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
- 
-            local pad = Instance.new("UIPadding", frame)
-            pad.PaddingLeft = UDim.new(0, 15); pad.PaddingRight = UDim.new(0, 15)
-            pad.PaddingTop = UDim.new(0, 15); pad.PaddingBottom = UDim.new(0, 15)
- 
-            local t = Instance.new("TextLabel")
-            t.Text = title
-            t.Font = Enum.Font.GothamBold
-            t.TextColor3 = Theme.TextPrimary
-            t.TextSize = 16
-            t.Size = UDim2.new(1, 0, 0, 25)
-            t.BackgroundTransparency = 1
-            t.TextXAlignment = Enum.TextXAlignment.Left
-            t.Parent = frame
- 
-            local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 0)
-            container.Position = UDim2.new(0, 0, 0, 35)
-            container.AutomaticSize = Enum.AutomaticSize.Y
-            container.BackgroundTransparency = 1
-            container.Parent = frame
- 
-            local grid = Instance.new("UIListLayout")
-            grid.Padding = UDim.new(0, 8)
-            grid.SortOrder = Enum.SortOrder.LayoutOrder
-            grid.Parent = container
- 
-            for _, tickData in ipairs(ticks) do
-                local row = Instance.new("Frame")
-                row.Size = UDim2.new(1, 0, 0, 35)
-                row.BackgroundTransparency = 1
-                row.Parent = container
- 
-                local subIcon = Instance.new("ImageLabel")
-                subIcon.Size = UDim2.fromOffset(20, 20)
-                subIcon.Position = UDim2.new(0, 0, 0.5, 0)
-                subIcon.AnchorPoint = Vector2.new(0, 0.5)
-                subIcon.BackgroundTransparency = 1
-                subIcon.Image = tickData.Icon
-                subIcon.ImageColor3 = Theme.TextSec
-                subIcon.Parent = row
- 
-                local label = Instance.new("TextLabel")
-                label.Text = tickData.Text
-                label.Font = Enum.Font.GothamMedium
-                label.TextSize = 13
-                label.TextColor3 = Theme.TextSec
-                label.Size = UDim2.new(1, -65, 1, 0)
-                label.Position = UDim2.new(0, 28, 0, 0)
-                label.TextXAlignment = Enum.TextXAlignment.Left
-                label.BackgroundTransparency = 1
-                label.Parent = row
- 
-                local box = Instance.new("TextButton")
-                box.Size = UDim2.fromOffset(24, 24)
-                box.Position = UDim2.new(1, 0, 0.5, 0)
-                box.AnchorPoint = Vector2.new(1, 0.5)
-                box.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-                box.Text = ""
-                box.Parent = row
-                Corner(5, box)
-                Stroke(Theme.Accent, 1.5, box)
- 
-                local check = Instance.new("ImageLabel")
-                check.Size = UDim2.fromScale(0.7, 0.7)
-                check.Position = UDim2.fromScale(0.5, 0.5)
-                check.AnchorPoint = Vector2.new(0.5, 0.5)
-                check.BackgroundTransparency = 1
-                check.Image = "rbxassetid://6353957304"
-                check.ImageColor3 = Theme.Success
-                check.ImageTransparency = tickData.Default and 0 or 1
-                check.Parent = box
- 
-                local active = tickData.Default
-                box.MouseButton1Click:Connect(function()
-                    active = not active
-                    TweenService:Create(check, TweenInfo.new(0.2), {ImageTransparency = active and 0 or 1}):Play()
-                    tickData.Callback(active)
-                end)
             end
-        end
- 
-        function Elements:AddKeybind(title, iconId, default, side, callback)
-            local currentKey = default or Enum.KeyCode.LeftControl
-            local listening = false
-            
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 65)
-            frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
- 
-            local ibg = Instance.new("Frame")
-            ibg.Size = UDim2.fromOffset(45, 45)
-            ibg.Position = UDim2.new(0, 10, 0.5, 0)
-            ibg.AnchorPoint = Vector2.new(0, 0.5)
-            ibg.BackgroundColor3 = Theme.IconBg
-            ibg.Parent = frame
-            Corner(8, ibg)
- 
-            local icon = Instance.new("ImageLabel")
-            icon.Size = UDim2.fromScale(0.65, 0.65)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.BackgroundTransparency = 1
-            icon.Image = iconId
-            icon.Parent = ibg
- 
-            local label = Instance.new("TextLabel")
-            label.Text = title
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 14
-            label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 65, 0.5, 0)
-            label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -160, 0, 20)
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.BackgroundTransparency = 1
-            label.Parent = frame
- 
-            local bindBox = Instance.new("TextButton")
-            bindBox.Size = UDim2.fromOffset(85, 30)
-            bindBox.Position = UDim2.new(1, -15, 0.5, 0)
-            bindBox.AnchorPoint = Vector2.new(1, 0.5)
-            bindBox.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-            bindBox.Text = currentKey.Name
-            bindBox.Font = Enum.Font.GothamBold
-            bindBox.TextColor3 = Theme.TextPrimary
-            bindBox.TextSize = 11
-            bindBox.Parent = frame
-            Corner(6, bindBox)
-            Stroke(Theme.Border, 1, bindBox)
- 
-            bindBox.MouseButton1Click:Connect(function()
-                listening = true
-                bindBox.Text = "..."
+
+            btn.MouseButton1Click:Connect(function()
+                isToggled = not isToggled
+                updateVisuals()
+                callback(isToggled)
             end)
- 
-            UserInputService.InputBegan:Connect(function(input)
-                if listening and input.UserInputType == Enum.UserInputType.Keyboard then
-                    currentKey = input.KeyCode
-                    bindBox.Text = currentKey.Name
-                    listening = false
-                    callback(currentKey)
-                end
-            end)
+
+            table.insert(ThemeRegistry.TickButtons, {Instance = btn, GetChecked = function() return isToggled end})
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddButton(title, sub, iconId, side, callback)
+
+        function Elements:AddTickButton(title: string, iconId: string, side: string?, callback: (boolean) -> ())
+            local isChecked = false
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+
+            local ibg = Instance.new("Frame")
+            ibg.Size = UDim2.fromOffset(60, 60)
+            ibg.Position = UDim2.new(0, 12, 0.5, 0)
+            ibg.AnchorPoint = Vector2.new(0, 0.5)
+            ibg.BackgroundColor3 = Theme.IconBg
+            ibg.Parent = frame
+            Corner(10, ibg)
+
+            local icon = Instance.new("ImageLabel")
+            icon.Size = UDim2.fromScale(0.7, 0.7)
+            icon.Position = UDim2.fromScale(0.5, 0.5)
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.BackgroundTransparency = 1
+            icon.Image = iconId
+            icon.Parent = ibg
+
+            local label = Instance.new("TextLabel")
+            label.Text = title
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 14
+            label.TextColor3 = Theme.TextPrimary
+            label.Position = UDim2.new(0, 82, 0.5, 0)
+            label.AnchorPoint = Vector2.new(0, 0.5)
+            label.Size = UDim2.new(1, -145, 0, 40)
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
+            label.Parent = frame
+
+            local tickBox = Instance.new("TextButton")
+            tickBox.Size = UDim2.fromOffset(42, 42)
+            tickBox.Position = UDim2.new(1, -12, 0.5, 0)
+            tickBox.AnchorPoint = Vector2.new(1, 0.5)
+            tickBox.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+            tickBox.Text = ""
+            tickBox.Parent = frame
+            Corner(8, tickBox)
+            local boxStroke = Stroke(Theme.Border, 2, tickBox)
+
+            local checkIcon = Instance.new("ImageLabel")
+            checkIcon.Size = UDim2.fromScale(0.6, 0.6)
+            checkIcon.Position = UDim2.fromScale(0.5, 0.5)
+            checkIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+            checkIcon.BackgroundTransparency = 1
+            checkIcon.Image = "rbxassetid://10709790387"
+            checkIcon.ImageTransparency = 1
+            checkIcon.Parent = tickBox
+
+            tickBox.MouseButton1Click:Connect(function()
+                isChecked = not isChecked
+                TweenService:Create(tickBox, TweenInfo.new(0.2), {BackgroundColor3 = isChecked and Theme.Accent or Color3.fromRGB(30, 30, 35)}):Play()
+                TweenService:Create(checkIcon, TweenInfo.new(0.2), {ImageTransparency = isChecked and 0 or 1}):Play()
+                callback(isChecked)
+            end)
+            
+            table.insert(ThemeRegistry.TickButtons, {Instance = tickBox, GetChecked = function() return isChecked end})
+            return ApplyLocking(frame)
+        end
+
+        function Elements:AddButton(title: string, sub: string, iconId: string, side: string?, callback: () -> ())
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 80)
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local Scale = Instance.new("UIScale", frame)
@@ -1165,6 +1358,8 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local subLabel = Instance.new("TextLabel")
             subLabel.Text = sub
@@ -1176,6 +1371,8 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.Size = UDim2.new(1, -92, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
             subLabel.BackgroundTransparency = 1
+            subLabel.TextWrapped = true
+            subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
             local t = Instance.new("TextButton")
             t.Size = UDim2.fromScale(1, 1)
@@ -1185,110 +1382,23 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.MouseButton1Down:Connect(function() TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
             t.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
             t.MouseButton1Click:Connect(callback)
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddInputButton(title, iconId, buttonText, side, callback)
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 100)
-            frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
- 
-            local ibg = Instance.new("Frame")
-            ibg.Size = UDim2.fromOffset(45, 45)
-            ibg.Position = UDim2.new(0, 12, 0, 12)
-            ibg.BackgroundColor3 = Theme.IconBg
-            ibg.Parent = frame
-            Corner(8, ibg)
- 
-            local icon = Instance.new("ImageLabel")
-            icon.Size = UDim2.fromScale(0.7, 0.7)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = iconId
-            icon.BackgroundTransparency = 1
-            icon.Parent = ibg
- 
-            local label = Instance.new("TextLabel")
-            label.Text = title
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 14
-            label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 65, 0, 22)
-            label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -75, 0, 20)
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.BackgroundTransparency = 1
-            label.Parent = frame
- 
-            local inputFrame = Instance.new("Frame")
-            inputFrame.Size = UDim2.new(1, -135, 0, 32)
-            inputFrame.Position = UDim2.new(0, 12, 1, -12)
-            inputFrame.AnchorPoint = Vector2.new(0, 1)
-            inputFrame.BackgroundColor3 = Theme.Background
-            inputFrame.Parent = frame
-            Corner(6, inputFrame)
-            Stroke(Theme.Border, 1, inputFrame)
- 
-            local box = Instance.new("TextBox")
-            box.Size = UDim2.new(1, -10, 1, 0)
-            box.Position = UDim2.fromOffset(5, 0)
-            box.BackgroundTransparency = 1
-            box.Text = ""
-            box.PlaceholderText = "Paste key here..."
-            box.TextColor3 = Theme.TextPrimary
-            box.Font = Enum.Font.GothamMedium
-            box.TextSize = 12
-            box.TextXAlignment = Enum.TextXAlignment.Left
-            box.Parent = inputFrame
- 
-            local submit = Instance.new("TextButton")
-            submit.Size = UDim2.new(0, 100, 0, 32)
-            submit.Position = UDim2.new(1, -12, 1, -12)
-            submit.AnchorPoint = Vector2.new(1, 1)
-            submit.BackgroundColor3 = Theme.Accent
-            submit.Text = buttonText
-            submit.Font = Enum.Font.GothamBold
-            submit.TextColor3 = Color3.new(1, 1, 1)
-            submit.TextSize = 13
-            submit.Parent = frame
-            Corner(6, submit)
- 
-            local statusLabel = Instance.new("TextLabel")
-            statusLabel.Size = UDim2.new(1, -135, 0, 15)
-            statusLabel.Position = UDim2.new(0, 12, 1, -48)
-            statusLabel.AnchorPoint = Vector2.new(0, 1)
-            statusLabel.BackgroundTransparency = 1
-            statusLabel.Text = ""
-            statusLabel.TextColor3 = Theme.TextSec
-            statusLabel.Font = Enum.Font.GothamMedium
-            statusLabel.TextSize = 10
-            statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-            statusLabel.Parent = frame
- 
-            submit.MouseButton1Click:Connect(function()
-                callback(box.Text)
-                statusLabel.Text = "Processing..."
-                task.delay(1.5, function()
-                    statusLabel.Text = "Status: Updated"
-                end)
-            end)
-        end
- 
-        function Elements:AddCombinButton(title, buttons, side)
+
+        function Elements:AddCombinButton(title: string, buttons: {{Text: string, Callback: () -> ()}}, side: string?)
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 0)
             frame.AutomaticSize = Enum.AutomaticSize.Y
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
- 
+
             local pad = Instance.new("UIPadding", frame)
             pad.PaddingLeft = UDim.new(0, 15); pad.PaddingRight = UDim.new(0, 15)
             pad.PaddingTop = UDim.new(0, 15); pad.PaddingBottom = UDim.new(0, 15)
- 
+
             local t = Instance.new("TextLabel")
             t.Text = title
             t.Font = Enum.Font.GothamBold
@@ -1298,59 +1408,101 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.BackgroundTransparency = 1
             t.TextXAlignment = Enum.TextXAlignment.Left
             t.Parent = frame
- 
+
             local container = Instance.new("Frame")
             container.Size = UDim2.new(1, 0, 0, 0)
             container.Position = UDim2.new(0, 0, 0, 35)
             container.AutomaticSize = Enum.AutomaticSize.Y
             container.BackgroundTransparency = 1
             container.Parent = frame
- 
+
             local grid = Instance.new("UIGridLayout")
             grid.CellSize = UDim2.new(0.5, -6, 0, 34)
             grid.CellPadding = UDim2.new(0, 12, 0, 10)
             grid.SortOrder = Enum.SortOrder.LayoutOrder
             grid.Parent = container
- 
+
             for i, btnData in ipairs(buttons) do
                 local b = Instance.new("TextButton")
                 b.BackgroundColor3 = Theme.Accent
-                b.Text = ""
+                b.Text = string.lower(btnData.Text)
+                b.Font = Enum.Font.GothamBold
+                b.TextColor3 = Color3.new(1, 1, 1)
+                b.TextSize = 14
                 b.Parent = container
                 Corner(6, b)
- 
-                local bIcon = Instance.new("ImageLabel")
-                bIcon.Size = UDim2.fromOffset(16, 16)
-                bIcon.Position = UDim2.new(0, 8, 0.5, 0)
-                bIcon.AnchorPoint = Vector2.new(0, 0.5)
-                bIcon.BackgroundTransparency = 1
-                bIcon.Image = btnData.Icon or "rbxassetid://10747373176"
-                bIcon.ImageColor3 = Color3.new(1, 1, 1)
-                bIcon.Parent = b
- 
-                local bText = Instance.new("TextLabel")
-                bText.Size = UDim2.new(1, -30, 1, 0)
-                bText.Position = UDim2.new(0, 26, 0, 0)
-                bText.BackgroundTransparency = 1
-                bText.Text = string.lower(btnData.Text)
-                bText.Font = Enum.Font.GothamBold
-                bText.TextColor3 = Color3.new(1, 1, 1)
-                bText.TextSize = 12
-                bText.TextXAlignment = Enum.TextXAlignment.Left
-                bText.Parent = b
- 
+                table.insert(ThemeRegistry.Accents, b)
+
                 local bScale = Instance.new("UIScale", b)
                 b.MouseButton1Down:Connect(function() TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
                 b.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
                 b.MouseButton1Click:Connect(btnData.Callback)
             end
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddTextBox(title, iconId, side, callback)
+
+        function Elements:AddCombinButtonCompact(title: string, buttons: {{Text: string, Callback: () -> ()}}, side: string?)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 0)
+            frame.AutomaticSize = Enum.AutomaticSize.Y 
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+
+            local pad = Instance.new("UIPadding", frame)
+            pad.PaddingLeft = UDim.new(0, 10); pad.PaddingRight = UDim.new(0, 10)
+            pad.PaddingTop = UDim.new(0, 10); pad.PaddingBottom = UDim.new(0, 10)
+
+            local t = Instance.new("TextLabel")
+            t.Text = title
+            t.Font = Enum.Font.GothamBold
+            t.TextColor3 = Theme.TextPrimary
+            t.TextSize = 14
+            t.Size = UDim2.new(1, 0, 0, 20)
+            t.BackgroundTransparency = 1
+            t.TextXAlignment = Enum.TextXAlignment.Left
+            t.Parent = frame
+
+            local container = Instance.new("Frame")
+            container.Size = UDim2.new(1, 0, 0, 0)
+            container.Position = UDim2.new(0, 0, 0, 25)
+            container.AutomaticSize = Enum.AutomaticSize.Y
+            container.BackgroundTransparency = 1
+            container.Parent = frame
+
+            local grid = Instance.new("UIGridLayout")
+            grid.CellSize = UDim2.new(0.5, -4, 0, 28)
+            grid.CellPadding = UDim2.new(0, 8, 0, 6)
+            grid.SortOrder = Enum.SortOrder.LayoutOrder
+            grid.Parent = container
+
+            for i, btnData in ipairs(buttons) do
+                local b = Instance.new("TextButton")
+                b.BackgroundColor3 = Theme.Accent
+                b.Text = string.lower(btnData.Text)
+                b.Font = Enum.Font.GothamBold
+                b.TextColor3 = Color3.new(1, 1, 1)
+                b.TextSize = 12
+                b.Parent = container
+                Corner(4, b)
+                table.insert(ThemeRegistry.Accents, b)
+
+                local bScale = Instance.new("UIScale", b)
+                b.MouseButton1Down:Connect(function() TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
+                b.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
+                b.MouseButton1Click:Connect(btnData.Callback)
+            end
+            return ApplyLocking(frame)
+        end
+
+        function Elements:AddTextBox(title: string, iconId: string, side: string?, callback: (string) -> ())
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local ibg = Instance.new("Frame")
@@ -1377,12 +1529,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local inputFrame = Instance.new("Frame")
             inputFrame.Size = UDim2.new(1, -95, 0, 26)
             inputFrame.Position = UDim2.new(0, 82, 0.5, 12)
             inputFrame.AnchorPoint = Vector2.new(0, 0.5)
             inputFrame.BackgroundColor3 = Theme.Background
+            inputFrame.ClipsDescendants = true
             inputFrame.Parent = frame
             Corner(4, inputFrame)
             Stroke(Theme.Border, 1, inputFrame)
@@ -1396,18 +1551,21 @@ function AstralLib:CreateWindow(titleText, versionText)
             box.Font = Enum.Font.GothamMedium
             box.TextSize = 11
             box.TextXAlignment = Enum.TextXAlignment.Left
+            box.ClearTextOnFocus = false
             box.Parent = inputFrame
             box.FocusLost:Connect(function(enter) if enter then callback(box.Text) end end)
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddSlider(title, iconId, min, max, default, side, callback)
+
+        function Elements:AddSlider(title: string, iconId: string, min: number, max: number, default: number, side: string?, callback: (number) -> ())
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
- 
+
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
@@ -1415,7 +1573,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
             Corner(10, ibg)
- 
+
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.5, 0.5)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1423,7 +1581,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Image = iconId or "rbxassetid://6026663699"
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
- 
+
             local label = Instance.new("TextLabel")
             label.Text = title
             label.Font = Enum.Font.GothamBold
@@ -1434,8 +1592,10 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -140, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
- 
+
             local valBox = Instance.new("TextBox")
             valBox.Size = UDim2.fromOffset(55, 22)
             valBox.Position = UDim2.new(1, -12, 0, 22)
@@ -1449,30 +1609,31 @@ function AstralLib:CreateWindow(titleText, versionText)
             valBox.Parent = frame
             Corner(4, valBox)
             Stroke(Theme.Border, 1, valBox)
- 
+
             local SliderBG = Instance.new("Frame")
-            SliderBG.Size = UDim2.new(1, -95, 0, 10)
+            SliderBG.Size = UDim2.new(1, -95, 0, 14)
             SliderBG.Position = UDim2.new(0, 82, 0.5, 12)
             SliderBG.AnchorPoint = Vector2.new(0, 0.5)
             SliderBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             SliderBG.Parent = frame
-            Corner(2, SliderBG)
- 
+            Corner(4, SliderBG)
+
             local Progress = Instance.new("Frame")
             Progress.Size = UDim2.fromScale((default - min) / (max - min), 1)
             Progress.BackgroundColor3 = Theme.Accent
             Progress.Parent = SliderBG
-            Corner(2, Progress)
- 
+            Corner(4, Progress)
+            table.insert(ThemeRegistry.Accents, Progress)
+
             local knob = Instance.new("Frame")
-            knob.Size = UDim2.new(0, 10, 0, 20)
+            knob.Size = UDim2.new(0, 12, 0, 24)
             knob.Position = UDim2.fromScale((default - min) / (max - min), 0.5)
             knob.AnchorPoint = Vector2.new(0.5, 0.5)
             knob.BackgroundColor3 = Theme.Knob
             knob.Parent = SliderBG
-            Corner(2, knob)
+            Corner(4, knob)
             Stroke(Color3.new(0,0,0), 1, knob)
- 
+
             local function update(inputPos)
                 local pos = math.clamp((inputPos.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
                 local val = math.floor(min + (max - min) * pos)
@@ -1481,7 +1642,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                 knob.Position = UDim2.fromScale(pos, 0.5)
                 callback(val)
             end
- 
+
             valBox.FocusLost:Connect(function()
                 local val = tonumber(valBox.Text)
                 if val then
@@ -1495,7 +1656,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                     valBox.Text = tostring(default)
                 end
             end)
- 
+
             local dragging = false
             SliderBG.InputBegan:Connect(function(input) 
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
@@ -1513,15 +1674,17 @@ function AstralLib:CreateWindow(titleText, versionText)
                     dragging = false 
                 end 
             end)
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddSelector(title, iconId, options, config, side, callback)
+
+        function Elements:AddSelector(title: string, iconId: string, options: {any}, config: {MaxSelect: number, Default: {string}?}, side: string?, callback: ({string}) -> ())
             local maxSelect = config.MaxSelect or 1
             local selected = config.Default or {}
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             local ibg = Instance.new("Frame")
@@ -1548,26 +1711,34 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local subLabel = Instance.new("TextLabel")
-            
-            local function GetSelectionText()
-                if #selected == 0 then return "None Selected" end
-                if #selected == 1 then return selected[1] end
-                return selected[1] .. " + " .. (#selected - 1) .. " more..."
-            end
- 
-            subLabel.Text = GetSelectionText()
+            subLabel.Text = "Click to select (0/" .. maxSelect .. ")"
             subLabel.Font = Enum.Font.GothamMedium
             subLabel.TextSize = 11
-            subLabel.TextColor3 = Theme.Accent
+            subLabel.TextColor3 = Theme.TextSec
             subLabel.Position = UDim2.new(0, 82, 0.5, 10)
             subLabel.AnchorPoint = Vector2.new(0, 0.5)
             subLabel.Size = UDim2.new(1, -92, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
             subLabel.BackgroundTransparency = 1
+            subLabel.TextWrapped = true
+            subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
- 
+
+            local function updateSubLabel()
+                if #selected == 0 then
+                    subLabel.Text = "Click to select (0/" .. maxSelect .. ")"
+                elseif #selected == 1 then
+                    subLabel.Text = selected[1] .. " (1/" .. maxSelect .. ")"
+                else
+                    subLabel.Text = selected[1] .. ", ..." .. " (" .. #selected .. "/" .. maxSelect .. ")"
+                end
+            end
+            updateSubLabel()
+
             local Overlay = Instance.new("TextButton")
             Overlay.Size = UDim2.fromScale(1, 1)
             Overlay.BackgroundTransparency = 1
@@ -1622,23 +1793,29 @@ function AstralLib:CreateWindow(titleText, versionText)
             List.ScrollBarImageColor3 = Theme.Accent
             List.ZIndex = 502
             List.Parent = Panel
+            table.insert(ThemeRegistry.Accents, List)
+
             local ListLayout = Instance.new("UIListLayout")
-            ListLayout.SortOrder = Enum.SortOrder.Name
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
             ListLayout.Parent = List
             local function UpdateList()
                 for _, child in ipairs(List:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
-                for _, opt in ipairs(options) do
-                    if SearchBox.Text == "" or string.find(string.lower(opt), string.lower(SearchBox.Text)) then
-                        local isSelected = table.find(selected, opt)
+                for _, optData in ipairs(options) do
+                    local optName = type(optData) == "table" and optData.Name or optData
+                    local optIcon = type(optData) == "table" and optData.Icon or nil
+                    
+                    if SearchBox.Text == "" or string.find(string.lower(optName), string.lower(SearchBox.Text)) then
+                        local isSelected = table.find(selected, optName)
                         local btn = Instance.new("TextButton")
-                        btn.Name = opt
-                        btn.Size = UDim2.new(1, 0, 0, 40)
+                        btn.Name = optName
+                        btn.Size = UDim2.new(1, 0, 0, 45)
                         btn.BackgroundColor3 = isSelected and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(15, 15, 15)
                         btn.BorderSizePixel = 0
                         btn.Text = ""
                         btn.AutoButtonColor = false
                         btn.ZIndex = 504
                         btn.Parent = List
+
                         local indicator = Instance.new("Frame")
                         indicator.Size = UDim2.new(0, 3, 0, 22)
                         indicator.Position = UDim2.new(0, 5, 0.5, 0)
@@ -1648,29 +1825,54 @@ function AstralLib:CreateWindow(titleText, versionText)
                         indicator.ZIndex = 505
                         indicator.Parent = btn
                         Corner(2, indicator)
+                        table.insert(ThemeRegistry.Accents, indicator)
+
+                        local textOffset = 20
+                        if optIcon then
+                            local iconBg = Instance.new("Frame")
+                            iconBg.Size = UDim2.fromOffset(32, 32)
+                            iconBg.Position = UDim2.new(0, 15, 0.5, 0)
+                            iconBg.AnchorPoint = Vector2.new(0, 0.5)
+                            iconBg.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+                            iconBg.ZIndex = 505
+                            iconBg.Parent = btn
+                            Corner(6, iconBg)
+
+                            local iconImg = Instance.new("ImageLabel")
+                            iconImg.Size = UDim2.fromScale(0.7, 0.7)
+                            iconImg.Position = UDim2.fromScale(0.5, 0.5)
+                            iconImg.AnchorPoint = Vector2.new(0.5, 0.5)
+                            iconImg.Image = optIcon
+                            iconImg.BackgroundTransparency = 1
+                            iconImg.ZIndex = 506
+                            iconImg.Parent = iconBg
+                            textOffset = 55
+                        end
+
                         local optLabel = Instance.new("TextLabel")
-                        optLabel.Size = UDim2.new(1, -30, 1, 0)
-                        optLabel.Position = UDim2.new(0, 20, 0, 0)
+                        optLabel.Size = UDim2.new(1, -textOffset - 10, 1, 0)
+                        optLabel.Position = UDim2.new(0, textOffset, 0, 0)
                         optLabel.BackgroundTransparency = 1
-                        optLabel.Text = opt
+                        optLabel.Text = optName
                         optLabel.TextColor3 = isSelected and Theme.TextPrimary or Theme.TextSec
                         optLabel.Font = Enum.Font.GothamMedium
                         optLabel.TextSize = 13
                         optLabel.TextXAlignment = Enum.TextXAlignment.Left
                         optLabel.ZIndex = 505
                         optLabel.Parent = btn
+
                         btn.MouseButton1Click:Connect(function()
-                            local idx = table.find(selected, opt)
+                            local idx = table.find(selected, optName)
                             if idx then table.remove(selected, idx) else
-                                if #selected < maxSelect then table.insert(selected, opt) elseif maxSelect == 1 then selected = {opt} end
+                                if #selected < maxSelect then table.insert(selected, optName) elseif maxSelect == 1 then selected = {optName} end
                             end
-                            subLabel.Text = GetSelectionText()
+                            updateSubLabel()
                             UpdateList()
                             callback(selected)
                         end)
                     end
                 end
-                task.defer(function() List.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10) end)
+                task.defer(function() List.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y) end)
             end
             SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateList)
             local function TogglePanel(state)
@@ -1684,18 +1886,22 @@ function AstralLib:CreateWindow(titleText, versionText)
             trigger.Parent = frame
             trigger.MouseButton1Click:Connect(function() TogglePanel(true) end)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
+            return ApplyLocking(frame)
         end
- 
-        function Elements:AddColorPicker(title, sub, default, side, callback)
+
+        function Elements:AddColorPicker(title: string, sub: string, default: Color3, side: string?, callback: (Color3) -> ())
             local h, s, v = Color3.toHSV(default)
             local originalColor = default
             local currentColor = default
+            
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(1, 0, 0, 80)
             frame.BackgroundColor3 = Theme.Card
-            frame.Parent = (side == "Right" and RightColumn) or LeftColumn
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
@@ -1703,6 +1909,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
             Corner(10, ibg)
+            
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1710,6 +1917,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Image = "rbxassetid://114291598644525"
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
+            
             local label = Instance.new("TextLabel")
             label.Text = title
             label.Font = Enum.Font.GothamBold
@@ -1717,10 +1925,13 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0.5, -10)
             label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -140, 0, 20)
+            label.Size = UDim2.new(1, -165, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
+            label.TextWrapped = true
+            label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
+            
             local subLabel = Instance.new("TextLabel")
             subLabel.Text = sub
             subLabel.Font = Enum.Font.GothamMedium
@@ -1728,10 +1939,13 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.TextColor3 = Theme.TextSec
             subLabel.Position = UDim2.new(0, 82, 0.5, 10)
             subLabel.AnchorPoint = Vector2.new(0, 0.5)
-            subLabel.Size = UDim2.new(1, -140, 0, 20)
+            subLabel.Size = UDim2.new(1, -165, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
             subLabel.BackgroundTransparency = 1
+            subLabel.TextWrapped = true
+            subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
+            
             local ColorSquare = Instance.new("TextButton")
             ColorSquare.Size = UDim2.fromOffset(55, 35)
             ColorSquare.Position = UDim2.new(1, -15, 0.5, 0)
@@ -1741,6 +1955,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ColorSquare.Parent = frame
             Corner(5, ColorSquare)
             Stroke(Theme.Border, 1, ColorSquare)
+            
             local Overlay = Instance.new("TextButton")
             Overlay.Size = UDim2.fromScale(1, 1)
             Overlay.BackgroundTransparency = 1
@@ -1748,65 +1963,47 @@ function AstralLib:CreateWindow(titleText, versionText)
             Overlay.Visible = false
             Overlay.ZIndex = 500
             Overlay.Parent = MainFrame
+            
             local Panel = Instance.new("Frame")
             Panel.Size = UDim2.new(0, 240, 1, 0)
             Panel.Position = UDim2.new(1, 0, 0, 0)
-            Panel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            Panel.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
             Panel.BorderSizePixel = 0
             Panel.ZIndex = 501
             Panel.ClipsDescendants = true
             Panel.Active = true
             Panel.Parent = MainFrame
             Stroke(Theme.Border, 1, Panel)
-            local Title = Instance.new("TextLabel")
-            Title.Text = "Color Picker"
-            Title.Font = Enum.Font.GothamBold
-            Title.TextSize = 16
-            Title.TextColor3 = Theme.TextPrimary
-            Title.Position = UDim2.new(0, 15, 0, 15)
-            Title.Size = UDim2.new(0, 100, 0, 20)
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            Title.BackgroundTransparency = 1
-            Title.ZIndex = 502
-            Title.Parent = Panel
-            local HexInput = Instance.new("TextBox")
-            HexInput.Size = UDim2.new(1, -30, 0, 30)
-            HexInput.Position = UDim2.new(0, 15, 0, 45)
-            HexInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            HexInput.Text = "#" .. default:ToHex():upper()
-            HexInput.Font = Enum.Font.Code
-            HexInput.TextSize = 12
-            HexInput.TextColor3 = Theme.TextPrimary
-            HexInput.ZIndex = 502
-            HexInput.Parent = Panel
-            Corner(6, HexInput)
-            Stroke(Theme.Border, 1, HexInput)
+            
             local SVMap = Instance.new("ImageLabel")
             SVMap.Size = UDim2.new(1, -30, 0, 150)
-            SVMap.Position = UDim2.new(0, 15, 0, 85)
+            SVMap.Position = UDim2.new(0, 15, 0, 20)
             SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
             SVMap.Image = "rbxassetid://4155801252"
             SVMap.ZIndex = 502
             SVMap.Active = true
             SVMap.Parent = Panel
-            Corner(8, SVMap)
+            Corner(4, SVMap)
+            
             local SVCursor = Instance.new("Frame")
-            SVCursor.Size = UDim2.fromOffset(10, 10)
+            SVCursor.Size = UDim2.fromOffset(12, 12)
             SVCursor.Position = UDim2.fromScale(s, 1 - v)
             SVCursor.AnchorPoint = Vector2.new(0.5, 0.5)
             SVCursor.BackgroundColor3 = Color3.new(1, 1, 1)
             SVCursor.ZIndex = 503
             SVCursor.Parent = SVMap
-            Corner(10, SVCursor)
-            Stroke(Color3.new(0, 0, 0), 1, SVCursor)
+            Corner(12, SVCursor)
+            Stroke(Color3.new(0, 0, 0), 1.5, SVCursor)
+            
             local HueSlider = Instance.new("ImageLabel")
-            HueSlider.Size = UDim2.new(1, -30, 0, 20)
-            HueSlider.Position = UDim2.new(0, 15, 0, 245)
+            HueSlider.Size = UDim2.new(1, -30, 0, 18)
+            HueSlider.Position = UDim2.new(0, 15, 0, 180)
             HueSlider.BackgroundColor3 = Color3.new(1, 1, 1)
             HueSlider.ZIndex = 502
             HueSlider.Active = true
             HueSlider.Parent = Panel
-            Corner(6, HueSlider)
+            Corner(4, HueSlider)
+            
             local HueGradient = Instance.new("UIGradient")
             HueGradient.Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)),
@@ -1818,38 +2015,138 @@ function AstralLib:CreateWindow(titleText, versionText)
                 ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
             })
             HueGradient.Parent = HueSlider
+            
             local HueCursor = Instance.new("Frame")
-            HueCursor.Size = UDim2.new(0, 4, 1, 0)
-            HueCursor.Position = UDim2.fromScale(h, 0)
+            HueCursor.Size = UDim2.new(0, 14, 1, 4)
+            HueCursor.Position = UDim2.fromScale(h, 0.5)
+            HueCursor.AnchorPoint = Vector2.new(0.5, 0.5)
             HueCursor.BackgroundColor3 = Color3.new(1, 1, 1)
             HueCursor.ZIndex = 503
             HueCursor.Parent = HueSlider
-            Corner(2, HueCursor)
-            local PreviewContainer = Instance.new("Frame")
-            PreviewContainer.Size = UDim2.new(1, -30, 0, 40)
-            PreviewContainer.Position = UDim2.new(0, 15, 0, 275)
-            PreviewContainer.BackgroundTransparency = 1
-            PreviewContainer.ZIndex = 502
-            PreviewContainer.Active = true
-            PreviewContainer.Parent = Panel
-            local NewColorPreview = Instance.new("Frame")
-            NewColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
-            NewColorPreview.BackgroundColor3 = default
-            NewColorPreview.ZIndex = 503
-            NewColorPreview.Parent = PreviewContainer
-            Corner(6, NewColorPreview)
-            Stroke(Theme.Border, 1, NewColorPreview)
-            local OldColorPreview = Instance.new("Frame")
-            OldColorPreview.Size = UDim2.new(0.5, -5, 1, 0)
-            OldColorPreview.Position = UDim2.new(0.5, 5, 0, 0)
-            OldColorPreview.BackgroundColor3 = default
-            OldColorPreview.ZIndex = 503
-            OldColorPreview.Parent = PreviewContainer
-            Corner(6, OldColorPreview)
-            Stroke(Theme.Border, 1, OldColorPreview)
+            Corner(4, HueCursor)
+            Stroke(Color3.new(0, 0, 0), 1, HueCursor)
+            
+            local PreviewRow = Instance.new("Frame")
+            PreviewRow.Size = UDim2.new(1, -30, 0, 40)
+            PreviewRow.Position = UDim2.new(0, 15, 0, 210)
+            PreviewRow.BackgroundTransparency = 1
+            PreviewRow.ZIndex = 502
+            PreviewRow.Parent = Panel
+
+            local function CreatePreviewBox(title, color)
+                local b = Instance.new("Frame")
+                b.Size = UDim2.new(0.5, -5, 1, 0)
+                b.BackgroundColor3 = color
+                b.ZIndex = 503
+                b.Parent = PreviewRow
+                Corner(4, b)
+                Stroke(Theme.Border, 1, b)
+                local t = Instance.new("TextLabel")
+                t.Size = UDim2.fromScale(1, 1)
+                t.BackgroundTransparency = 1
+                t.Text = title
+                t.TextColor3 = Color3.new(1, 1, 1)
+                t.Font = Enum.Font.GothamBold
+                t.TextSize = 10
+                t.ZIndex = 504
+                t.Parent = b
+                return b
+            end
+
+            local CurrentBox = CreatePreviewBox("CURRENT", originalColor)
+            local NewBox = CreatePreviewBox("NEW", currentColor)
+            NewBox.Position = UDim2.fromScale(0.5, 0)
+
+            local InputRow = Instance.new("Frame")
+            InputRow.Size = UDim2.new(1, -30, 0, 35)
+            InputRow.Position = UDim2.new(0, 15, 0, 260)
+            InputRow.BackgroundTransparency = 1
+            InputRow.ZIndex = 502
+            InputRow.Parent = Panel
+
+            local function CreateColorInput(placeholder, pos, size)
+                local f = Instance.new("Frame")
+                f.Size = size
+                f.Position = pos
+                f.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+                f.ZIndex = 503
+                f.Parent = InputRow
+                Corner(4, f)
+                Stroke(Theme.Border, 1, f)
+                local b = Instance.new("TextBox")
+                b.Size = UDim2.fromScale(1, 1)
+                b.BackgroundTransparency = 1
+                b.Text = ""
+                b.PlaceholderText = placeholder
+                b.TextColor3 = Color3.new(1, 1, 1)
+                b.Font = Enum.Font.GothamBold
+                b.TextSize = 12
+                b.ZIndex = 504
+                b.Parent = f
+                return b
+            end
+
+            local RInput = CreateColorInput("R", UDim2.fromScale(0, 0), UDim2.new(0.3, -5, 1, 0))
+            local GInput = CreateColorInput("G", UDim2.fromScale(0.33, 0), UDim2.new(0.3, -5, 1, 0))
+            local BInput = CreateColorInput("B", UDim2.fromScale(0.66, 0), UDim2.new(0.3, 4, 1, 0))
+            
+            local HexInput = CreateColorInput("#FFFFFF", UDim2.new(0, 15, 0, 305), UDim2.new(1, -30, 0, 35))
+            HexInput.Parent.Parent = Panel
+
+            local function UpdateVisuals(syncInputs)
+                currentColor = Color3.fromHSV(h, s, v)
+                NewBox.BackgroundColor3 = currentColor
+                SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                SVCursor.Position = UDim2.fromScale(s, 1 - v)
+                HueCursor.Position = UDim2.fromScale(h, 0.5)
+                
+                if syncInputs then
+                    RInput.Text = tostring(math.floor(currentColor.R * 255))
+                    GInput.Text = tostring(math.floor(currentColor.G * 255))
+                    BInput.Text = tostring(math.floor(currentColor.B * 255))
+                    HexInput.Text = "#" .. currentColor:ToHex():upper()
+                end
+            end
+
+            local function ManualUpdate()
+                local r, g, b = tonumber(RInput.Text) or 0, tonumber(GInput.Text) or 0, tonumber(BInput.Text) or 0
+                currentColor = Color3.fromRGB(math.clamp(r, 0, 255), math.clamp(g, 0, 255), math.clamp(b, 0, 255))
+                h, s, v = Color3.toHSV(currentColor)
+                UpdateVisuals(false)
+                HexInput.Text = "#" .. currentColor:ToHex():upper()
+            end
+
+            RInput.FocusLost:Connect(ManualUpdate)
+            GInput.FocusLost:Connect(ManualUpdate)
+            BInput.FocusLost:Connect(ManualUpdate)
+            HexInput.FocusLost:Connect(function()
+                local success, res = pcall(Color3.fromHex, HexInput.Text)
+                if success then
+                    currentColor = res
+                    h, s, v = Color3.toHSV(currentColor)
+                    UpdateVisuals(true)
+                end
+            end)
+
+            local draggingSV = false
+            SVMap.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = true end end)
+            local draggingHue = false
+            HueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local pos = Vector2.new(math.clamp((input.Position.X - SVMap.AbsolutePosition.X) / SVMap.AbsoluteSize.X, 0, 1), math.clamp((input.Position.Y - SVMap.AbsolutePosition.Y) / SVMap.AbsoluteSize.Y, 0, 1))
+                    s = pos.X v = 1 - pos.Y UpdateVisuals(true)
+                elseif draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    h = math.clamp((input.Position.X - HueSlider.AbsolutePosition.X) / HueSlider.AbsoluteSize.X, 0, 1) UpdateVisuals(true)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false draggingHue = false end end)
+            
             local ApplyBtn = Instance.new("TextButton")
-            ApplyBtn.Size = UDim2.new(0.5, -20, 0, 35)
-            ApplyBtn.Position = UDim2.new(0, 15, 0, 325)
+            ApplyBtn.Size = UDim2.new(1, -30, 0, 35)
+            ApplyBtn.Position = UDim2.new(0, 15, 1, -90)
             ApplyBtn.BackgroundColor3 = Theme.Accent
             ApplyBtn.Text = "Apply"
             ApplyBtn.Font = Enum.Font.GothamBold
@@ -1858,11 +2155,12 @@ function AstralLib:CreateWindow(titleText, versionText)
             ApplyBtn.ZIndex = 502
             ApplyBtn.Parent = Panel
             Corner(6, ApplyBtn)
+            table.insert(ThemeRegistry.Accents, ApplyBtn)
 
             local CancelBtn = Instance.new("TextButton")
-            CancelBtn.Size = UDim2.new(0.5, -20, 0, 35)
-            CancelBtn.Position = UDim2.new(0.5, 5, 0, 325)
-            CancelBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+            CancelBtn.Size = UDim2.new(1, -30, 0, 35)
+            CancelBtn.Position = UDim2.new(0, 15, 1, -45)
+            CancelBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             CancelBtn.Text = "Cancel"
             CancelBtn.Font = Enum.Font.GothamBold
             CancelBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -1871,43 +2169,105 @@ function AstralLib:CreateWindow(titleText, versionText)
             CancelBtn.Parent = Panel
             Corner(6, CancelBtn)
 
-            local function UpdateColor(skipHex)
-                currentColor = Color3.fromHSV(h, s, v)
-                NewColorPreview.BackgroundColor3 = currentColor
-                SVMap.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
-                if not skipHex then HexInput.Text = "#" .. currentColor:ToHex():upper() end
-                SVCursor.Position = UDim2.fromScale(s, 1 - v)
-                HueCursor.Position = UDim2.fromScale(h, 0)
+            local function TogglePanel(state)
+                if state then 
+                    originalColor = currentColor 
+                    CurrentBox.BackgroundColor3 = originalColor
+                    Overlay.Visible = true 
+                    UpdateVisuals(true)
+                    TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
+                else 
+                    TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() 
+                    task.delay(0.3, function() Overlay.Visible = false end) 
+                end
             end
-            HexInput.FocusLost:Connect(function()
-                local success, result = pcall(Color3.fromHex, HexInput.Text)
-                if success then local nh, ns, nv = Color3.toHSV(result) h, s, v = nh, ns, nv UpdateColor(true) else HexInput.Text = "#" .. currentColor:ToHex():upper() end
+            
+            ApplyBtn.MouseButton1Click:Connect(function() ColorSquare.BackgroundColor3 = currentColor callback(currentColor) TogglePanel(false) end)
+            CancelBtn.MouseButton1Click:Connect(function() currentColor = originalColor h, s, v = Color3.toHSV(currentColor) UpdateVisuals(true) TogglePanel(false) end)
+            ColorSquare.MouseButton1Click:Connect(function() TogglePanel(true) end)
+            
+            return ApplyLocking(frame)
+        end
+
+        function Elements:AddKeybind(title: string, default: Enum.KeyCode, side: string?, callback: (Enum.KeyCode) -> ())
+            local currentBind = default
+            local binding = false
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 80)
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+
+            local ibg = Instance.new("Frame")
+            ibg.Size = UDim2.fromOffset(60, 60)
+            ibg.Position = UDim2.new(0, 12, 0.5, 0)
+            ibg.AnchorPoint = Vector2.new(0, 0.5)
+            ibg.BackgroundColor3 = Theme.IconBg
+            ibg.Parent = frame
+            Corner(10, ibg)
+
+            local icon = Instance.new("ImageLabel")
+            icon.Size = UDim2.fromScale(0.6, 0.6)
+            icon.Position = UDim2.fromScale(0.5, 0.5)
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Image = "rbxassetid://15116556951"
+            icon.BackgroundTransparency = 1
+            icon.Parent = ibg
+
+            local label = Instance.new("TextLabel")
+            label.Text = title
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 16
+            label.TextColor3 = Theme.TextPrimary
+            label.Position = UDim2.new(0, 82, 0.5, 0)
+            label.AnchorPoint = Vector2.new(0, 0.5)
+            label.Size = UDim2.new(1, -195, 0, 40)
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.BackgroundTransparency = 1
+            label.TextTruncate = Enum.TextTruncate.AtEnd
+            label.Parent = frame
+
+            local bindBtn = Instance.new("TextButton")
+            bindBtn.Size = UDim2.new(0, 100, 0, 36)
+            bindBtn.Position = UDim2.new(1, -12, 0.5, 0)
+            bindBtn.AnchorPoint = Vector2.new(1, 0.5)
+            bindBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+            bindBtn.Text = ""
+            bindBtn.Parent = frame
+            Corner(8, bindBtn)
+            Stroke(Theme.Border, 1, bindBtn)
+
+            local bindText = Instance.new("TextLabel")
+            bindText.Size = UDim2.fromScale(1, 1)
+            bindText.BackgroundTransparency = 1
+            bindText.Text = currentBind.Name
+            bindText.TextColor3 = Theme.TextPrimary
+            bindText.Font = Enum.Font.GothamBold
+            bindText.TextSize = 13
+            bindText.Parent = bindBtn
+
+            bindBtn.MouseButton1Click:Connect(function()
+                binding = true
+                bindText.Text = "..."
             end)
-            local draggingSV = false
-            SVMap.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = true end end)
-            local draggingHue = false
-            HueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end end)
-            UserInputService.InputChanged:Connect(function(input)
-                if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local pos = Vector2.new(math.clamp((input.Position.X - SVMap.AbsolutePosition.X) / SVMap.AbsoluteSize.X, 0, 1), math.clamp((input.Position.Y - SVMap.AbsolutePosition.Y) / SVMap.AbsoluteSize.Y, 0, 1))
-                    s = pos.X v = 1 - pos.Y UpdateColor()
-                elseif draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    h = math.clamp((input.Position.X - HueSlider.AbsolutePosition.X) / HueSlider.AbsoluteSize.X, 0, 1) UpdateColor()
+
+            UserInputService.InputBegan:Connect(function(input)
+                if binding and input.UserInputType == Enum.UserInputType.Keyboard then
+                    binding = false
+                    currentBind = input.KeyCode
+                    bindText.Text = currentBind.Name
+                    callback(currentBind)
                 end
             end)
-            UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false draggingHue = false end end)
-            local function TogglePanel(state)
-                if state then originalColor = currentColor OldColorPreview.BackgroundColor3 = originalColor Overlay.Visible = true TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -240, 0, 0)}):Play()
-                else TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() task.delay(0.3, function() Overlay.Visible = false end) end
-            end
-            ApplyBtn.MouseButton1Click:Connect(function() ColorSquare.BackgroundColor3 = currentColor callback(currentColor) TogglePanel(false) end)
-            CancelBtn.MouseButton1Click:Connect(function() h, s, v = Color3.toHSV(originalColor) UpdateColor() TogglePanel(false) end)
-            ColorSquare.MouseButton1Click:Connect(function() TogglePanel(true) end)
+            return ApplyLocking(frame)
         end
- 
+
     return Elements
     end
     return Window
 end
- 
+
 return AstralLib
