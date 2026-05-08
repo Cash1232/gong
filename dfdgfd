@@ -1416,7 +1416,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Font = Enum.Font.GothamBold
             label.TextSize = 14
             label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 82, 0.5, -10)
+            label.Position = UDim2.new(0, 82, 0.5, -14) -- Moved up
             label.AnchorPoint = Vector2.new(0, 0.5)
             label.Size = UDim2.new(1, -125, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1429,7 +1429,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.Font = Enum.Font.GothamMedium
             subLabel.TextSize = 11
             subLabel.TextColor3 = Theme.TextSec
-            subLabel.Position = UDim2.new(0, 82, 0.5, 10)
+            subLabel.Position = UDim2.new(0, 82, 0.5, 6) -- Moved up
             subLabel.AnchorPoint = Vector2.new(0, 0.5)
             subLabel.Size = UDim2.new(1, -125, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -1617,7 +1617,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Font = Enum.Font.GothamBold
             label.TextSize = 14
             label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 82, 0.5, -12)
+            label.Position = UDim2.new(0, 82, 0.5, -16) -- Moved up
             label.AnchorPoint = Vector2.new(0, 0.5)
             label.Size = UDim2.new(1, -92, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1626,8 +1626,8 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.TextTruncate = Enum.TextTruncate.AtEnd
             label.Parent = frame
             local inputFrame = Instance.new("Frame")
-            inputFrame.Size = UDim2.new(1, -95, 0, 26)
-            inputFrame.Position = UDim2.new(0, 82, 0.5, 12)
+            inputFrame.Size = UDim2.new(1, -95, 0, 32) -- Made bigger
+            inputFrame.Position = UDim2.new(0, 82, 0.5, 14) -- Adjusted
             inputFrame.AnchorPoint = Vector2.new(0, 0.5)
             inputFrame.BackgroundColor3 = Theme.Background
             inputFrame.ClipsDescendants = true
@@ -1642,7 +1642,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             box.PlaceholderText = "Type here..."
             box.TextColor3 = Theme.TextPrimary
             box.Font = Enum.Font.GothamMedium
-            box.TextSize = 11
+            box.TextSize = 12 -- Slightly bigger text
             box.TextXAlignment = Enum.TextXAlignment.Left
             box.ClearTextOnFocus = false
             box.Parent = inputFrame
@@ -1878,33 +1878,34 @@ function AstralLib:CreateWindow(titleText, versionText)
             Panel.Parent = MainFrame
             Stroke(Theme.Border, 1, Panel)
 
-            -- // INTEGRATED SEARCH BAR (IMAGE 9 STYLE)
+            -- // INTEGRATED SEARCH BAR (CLEANER LOOK)
             local SearchFrame = Instance.new("Frame")
-            SearchFrame.Size = UDim2.new(1, 0, 0, 45)
-            SearchFrame.Position = UDim2.new(0, 0, 0, 0)
-            SearchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            SearchFrame.Size = UDim2.new(1, -20, 0, 38)
+            SearchFrame.Position = UDim2.new(0, 10, 0, 10)
+            SearchFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 25)
             SearchFrame.ZIndex = 502
             SearchFrame.Parent = Panel
+            Corner(6, SearchFrame)
             
-            local SearchGlow = Stroke(Theme.NeonGreen, 1, SearchFrame)
-            SearchGlow.Transparency = 0.85
+            local SearchGlow = Stroke(Theme.Accent, 1, SearchFrame) -- Changed to Blue
+            SearchGlow.Transparency = 0.7
 
             local SearchIcon = Instance.new("ImageLabel")
-            SearchIcon.Size = UDim2.fromOffset(18, 18)
-            SearchIcon.Position = UDim2.new(0, 15, 0.5, 0)
+            SearchIcon.Size = UDim2.fromOffset(16, 16)
+            SearchIcon.Position = UDim2.new(0, 10, 0.5, 0)
             SearchIcon.AnchorPoint = Vector2.new(0, 0.5)
             SearchIcon.Image = "rbxassetid://6031154871"
             SearchIcon.BackgroundTransparency = 1
-            SearchIcon.ImageColor3 = Theme.TextPrimary
+            SearchIcon.ImageColor3 = Theme.TextSec
             SearchIcon.ZIndex = 503
             SearchIcon.Parent = SearchFrame
 
             local SearchBox = Instance.new("TextBox")
-            SearchBox.Size = UDim2.new(1, -50, 1, 0)
-            SearchBox.Position = UDim2.new(0, 45, 0, 0)
+            SearchBox.Size = UDim2.new(1, -40, 1, 0)
+            SearchBox.Position = UDim2.new(0, 35, 0, 0)
             SearchBox.BackgroundTransparency = 1
             SearchBox.Text = ""
-            SearchBox.PlaceholderText = "Search Here..."
+            SearchBox.PlaceholderText = "Search options..."
             SearchBox.TextColor3 = Theme.TextPrimary
             SearchBox.PlaceholderColor3 = Theme.TextSec
             SearchBox.Font = Enum.Font.GothamMedium
@@ -1914,8 +1915,8 @@ function AstralLib:CreateWindow(titleText, versionText)
             SearchBox.Parent = SearchFrame
 
             local List = Instance.new("ScrollingFrame")
-            List.Size = UDim2.new(1, 0, 1, -45)
-            List.Position = UDim2.new(0, 0, 0, 45)
+            List.Size = UDim2.new(1, 0, 1, -60)
+            List.Position = UDim2.new(0, 0, 0, 60)
             List.BackgroundTransparency = 1
             List.ScrollBarThickness = 2
             List.ScrollBarImageColor3 = Theme.Accent
@@ -1925,7 +1926,7 @@ function AstralLib:CreateWindow(titleText, versionText)
  
             local ListLayout = Instance.new("UIListLayout")
             ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            ListLayout.Padding = UDim.new(0, 0) -- SEAMLESS LIST
+            ListLayout.Padding = UDim.new(0, 0)
             ListLayout.Parent = List
 
             local function UpdateList()
@@ -1939,19 +1940,19 @@ function AstralLib:CreateWindow(titleText, versionText)
                         local btn = Instance.new("TextButton")
                         btn.Name = optName
                         btn.Size = UDim2.new(1, 0, 0, 45)
-                        btn.BackgroundColor3 = isSelected and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(15, 15, 15)
+                        btn.BackgroundColor3 = isSelected and Color3.fromRGB(25, 25, 28) or Color3.fromRGB(15, 15, 15)
                         btn.BorderSizePixel = 0
                         btn.Text = ""
                         btn.AutoButtonColor = false
                         btn.ZIndex = 504
                         btn.Parent = List
  
-                        -- // NEON GREEN INDICATOR (IMAGE 9 STYLE)
+                        -- // BLUE INDICATOR (MATCHES UI)
                         local indicator = Instance.new("Frame")
                         indicator.Size = UDim2.new(0, 3, 0, 24)
                         indicator.Position = UDim2.new(0, 0, 0.5, 0)
                         indicator.AnchorPoint = Vector2.new(0, 0.5)
-                        indicator.BackgroundColor3 = Theme.NeonGreen
+                        indicator.BackgroundColor3 = Theme.Accent -- Changed to Blue
                         indicator.Visible = isSelected ~= nil
                         indicator.ZIndex = 505
                         indicator.Parent = btn
@@ -1960,7 +1961,7 @@ function AstralLib:CreateWindow(titleText, versionText)
                         local textOffset = 20
                         if optIcon then
                             local iconBg = Instance.new("Frame")
-                            iconBg.Size = UDim2.fromOffset(32, 32)
+                            iconBg.Size = UDim2.fromOffset(30, 30)
                             iconBg.Position = UDim2.new(0, 15, 0.5, 0)
                             iconBg.AnchorPoint = Vector2.new(0, 0.5)
                             iconBg.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -2363,7 +2364,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             local label = Instance.new("TextLabel")
             label.Text = title
             label.Font = Enum.Font.GothamBold
-            label.TextSize = 16
+            label.TextSize = 14 -- Consistent with other buttons
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0.5, 0)
             label.AnchorPoint = Vector2.new(0, 0.5)
