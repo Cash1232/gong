@@ -636,7 +636,6 @@ function AstralLib:CreateWindow(titleText, versionText)
         end
  
         function Elements:AddContentSection(config)
-            if type(config) ~= "table" then config = {Title = config} end
             local name = config.Title
             
             elementOrder = elementOrder + 1
@@ -668,8 +667,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             elementOrder = elementOrder + 1
         end
  
-        function Elements:AddParagraph(config, content)
-            if type(config) ~= "table" then config = {Title = config, Content = content} end
+        function Elements:AddParagraph(config)
             local title = config.Title
             local content = config.Content
             
@@ -710,8 +708,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddPreview(config, content)
-            if type(config) ~= "table" then config = {Title = config, Content = content} end
+        function Elements:AddPreview(config)
             local title = config.Title
             local content = config.Content
             
@@ -764,8 +761,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddModelPreview(config, btnText, side, modelSource)
-            if type(config) ~= "table" then config = {Title = config, ButtonText = btnText, Side = side, Source = modelSource} end
+        function Elements:AddModelPreview(config)
             local title = config.Title
             local btnText = config.ButtonText
             local side = config.Side
@@ -918,8 +914,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddStatusCard(config, status, imageId, statusColor, side)
-            if type(config) ~= "table" then config = {Title = config, Status = status, Icon = imageId, Color = statusColor, Side = side} end
+        function Elements:AddStatusCard(config)
             local title = config.Title
             local status = config.Status
             local imageId = config.Icon
@@ -946,7 +941,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.95, 0.95)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = imageId
+            icon.Image = imageId or ""
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
  
@@ -1002,8 +997,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddLabel(config, content, iconId, side)
-            if type(config) ~= "table" then config = {Title = config, Content = content, Icon = iconId, Side = side} end
+        function Elements:AddLabel(config)
             local title = config.Title
             local content = config.Content
             local iconId = config.Icon
@@ -1027,7 +1021,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
             local label = Instance.new("TextLabel")
@@ -1059,8 +1053,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddBanner(config, descText, bannerId, inviteCode)
-            if type(config) ~= "table" then config = {Title = config, Description = descText, Banner = bannerId, Invite = inviteCode} end
+        function Elements:AddBanner(config)
             local titleText = config.Title
             local descText = config.Description
             local bannerId = config.Banner
@@ -1082,7 +1075,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             local banner = Instance.new("ImageLabel")
             banner.Size = UDim2.new(1, 0, 0, 95)
             banner.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-            banner.Image = BannerID
+            banner.Image = BannerID or ""
             banner.ScaleType = Enum.ScaleType.Crop
             banner.Parent = frame
             Corner(10, banner)
@@ -1223,8 +1216,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddToggle(config, iconId, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Icon = iconId, Side = side, Callback = callback} end
+        function Elements:AddToggle(config)
             local title = config.Title
             local iconId = config.Icon
             local side = config.Side
@@ -1250,7 +1242,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
             icon.BackgroundTransparency = 1
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.Parent = ibg
             local label = Instance.new("TextLabel")
             label.Text = title
@@ -1297,8 +1289,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddTickButton(config, iconId, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Icon = iconId, Side = side, Callback = callback} end
+        function Elements:AddTickButton(config)
             local title = config.Title
             local iconId = config.Icon
             local side = config.Side
@@ -1326,7 +1317,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
             icon.BackgroundTransparency = 1
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.Parent = ibg
  
             local label = Instance.new("TextLabel")
@@ -1373,8 +1364,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddButton(config, sub, iconId, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Subtitle = sub, Icon = iconId, Side = side, Callback = callback} end
+        function Elements:AddButton(config)
             local title = config.Title
             local sub = config.Subtitle
             local iconId = config.Icon
@@ -1400,7 +1390,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
             local label = Instance.new("TextLabel")
@@ -1440,8 +1430,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddCombinButton(config, buttons, side)
-            if type(config) ~= "table" then config = {Title = config, Buttons = buttons, Side = side} end
+        function Elements:AddCombinButton(config)
             local title = config.Title
             local buttons = config.Buttons
             local side = config.Side
@@ -1501,8 +1490,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddCombinButtonCompact(config, buttons, side)
-            if type(config) ~= "table" then config = {Title = config, Buttons = buttons, Side = side} end
+        function Elements:AddCombinButtonCompact(config)
             local title = config.Title
             local buttons = config.Buttons
             local side = config.Side
@@ -1562,8 +1550,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddTextBox(config, iconId, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Icon = iconId, Side = side, Callback = callback} end
+        function Elements:AddTextBox(config)
             local title = config.Title
             local iconId = config.Icon
             local side = config.Side
@@ -1587,7 +1574,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
             local label = Instance.new("TextLabel")
@@ -1628,8 +1615,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddSlider(config, iconId, min, max, default, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Icon = iconId, Min = min, Max = max, Default = default, Side = side, Callback = callback} end
+        function Elements:AddSlider(config)
             local title = config.Title
             local iconId = config.Icon
             local min = config.Min
@@ -1757,18 +1743,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddSelector(config, iconId, options, selectorConfig, side, callback)
-            if type(config) ~= "table" then 
-                config = {
-                    Title = config, 
-                    Icon = iconId, 
-                    Options = options, 
-                    MaxSelect = selectorConfig.MaxSelect, 
-                    Default = selectorConfig.Default, 
-                    Side = side, 
-                    Callback = callback
-                } 
-            end
+        function Elements:AddSelector(config)
             local title = config.Title
             local iconId = config.Icon
             local options = config.Options
@@ -1795,7 +1770,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = iconId
+            icon.Image = iconId or ""
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
             local label = Instance.new("TextLabel")
@@ -1986,8 +1961,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddColorPicker(config, sub, default, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Subtitle = sub, Default = default, Side = side, Callback = callback} end
+        function Elements:AddColorPicker(config)
             local title = config.Title
             local sub = config.Subtitle
             local default = config.Default
@@ -2018,7 +1992,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = "rbxassetid://114291598644525"
+            icon.Image = config.Icon or "rbxassetid://114291598644525"
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
             
@@ -2293,8 +2267,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             return ApplyLocking(frame)
         end
  
-        function Elements:AddKeybind(config, default, side, callback)
-            if type(config) ~= "table" then config = {Title = config, Default = default, Side = side, Callback = callback} end
+        function Elements:AddKeybind(config)
             local title = config.Title
             local default = config.Default
             local side = config.Side
@@ -2323,7 +2296,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             icon.Size = UDim2.fromScale(0.6, 0.6)
             icon.Position = UDim2.fromScale(0.5, 0.5)
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Image = "rbxassetid://15116556951"
+            icon.Image = config.Icon or "rbxassetid://15116556951"
             icon.BackgroundTransparency = 1
             icon.Parent = ibg
  
@@ -2379,5 +2352,5 @@ function AstralLib:CreateWindow(titleText, versionText)
     end
     return Window
 end
-
+ 
 return AstralLib
