@@ -29,6 +29,7 @@ local Theme = {
 local LockIconID = "rbxassetid://17783082088"
 local ClickIconID = "rbxassetid://9468220156"
 local SelectorIconID = "rbxassetid://103256317191387"
+local ReviewIconID = "rbxassetid://11326670020"
  
 if CoreGui:FindFirstChild("Astral_UI_V9") then
     CoreGui.Astral_UI_V9:Destroy()
@@ -190,25 +191,6 @@ function AstralLib:CreateWindow(titleText, versionText)
     local MinScale = Instance.new("UIScale", MinimizeBtn)
     MakeDraggable(MinimizeBtn)
  
-    local StopTweenBtn = Instance.new("TextButton")
-    StopTweenBtn.Name = "StopTweenButton"
-    StopTweenBtn.Size = UDim2.new(0, 75, 0, 75)
-    StopTweenBtn.Position = UDim2.new(0, 50, 0.5, -37)
-    StopTweenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    StopTweenBtn.Text = "STOP\nTWEEN"
-    StopTweenBtn.TextColor3 = Color3.new(1, 1, 1)
-    StopTweenBtn.Font = Enum.Font.GothamBold
-    StopTweenBtn.TextSize = 13
-    StopTweenBtn.TextWrapped = true
-    StopTweenBtn.Active = true
-    StopTweenBtn.Parent = ScreenGui
-    Corner(100, StopTweenBtn)
-    local StopStroke = Stroke(Theme.Accent, 2, StopTweenBtn)
-    table.insert(ThemeRegistry.Accents, StopStroke)
-    
-    local StopScale = Instance.new("UIScale", StopTweenBtn)
-    MakeDraggable(StopTweenBtn)
- 
     local clickStartPos = Vector2.zero
  
     MinimizeBtn.InputBegan:Connect(function(input)
@@ -226,18 +208,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             if delta < 10 then
                 MainFrame.Visible = not MainFrame.Visible
             end
-        end
-    end)
- 
-    StopTweenBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 0.85}):Play()
-        end
-    end)
- 
-    StopTweenBtn.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
         end
     end)
  
@@ -437,6 +407,56 @@ function AstralLib:CreateWindow(titleText, versionText)
  
     function Window:UpdateMainColor(color)
         MainFrame.BackgroundColor3 = color
+    end
+
+    function Window:SetMinimizeIcon(iconId: string)
+        MinimizeBtn.Image = iconId
+    end
+
+    function Window:AddStopTweenButton(config)
+        local StopTweenBtn = Instance.new("TextButton")
+        StopTweenBtn.Name = "StopTweenButton"
+        StopTweenBtn.Size = UDim2.new(0, 75, 0, 75)
+        StopTweenBtn.Position = UDim2.new(0, 50, 0.5, -37)
+        StopTweenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        StopTweenBtn.Text = config.Text or "STOP\nTWEEN"
+        StopTweenBtn.TextColor3 = Color3.new(1, 1, 1)
+        StopTweenBtn.Font = Enum.Font.GothamBold
+        StopTweenBtn.TextSize = 13
+        StopTweenBtn.TextWrapped = true
+        StopTweenBtn.Active = true
+        StopTweenBtn.Parent = ScreenGui
+        Corner(100, StopTweenBtn)
+        local StopStroke = Stroke(Theme.Accent, 2, StopTweenBtn)
+        table.insert(ThemeRegistry.Accents, StopStroke)
+        
+        local StopScale = Instance.new("UIScale", StopTweenBtn)
+        MakeDraggable(StopTweenBtn)
+
+        StopTweenBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 0.85}):Play()
+            end
+        end)
+     
+        StopTweenBtn.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                TweenService:Create(StopScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+                
+                -- // TURN OFF LOGIC
+                if config.ToggleList then
+                    for _, toggle in ipairs(config.ToggleList) do
+                        if toggle.SetState then
+                            toggle:SetState(false)
+                        end
+                    end
+                end
+
+                if config.Callback then
+                    config.Callback()
+                end
+            end
+        end)
     end
  
     function Window:MakeTabSection(name)
@@ -1302,7 +1322,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
  
             table.insert(ThemeRegistry.TickButtons, {Instance = btn, GetChecked = function() return isToggled end})
-            return ApplyLocking(frame)
+            
+            local toggleObj = ApplyLocking(frame)
+            function toggleObj:SetState(state: boolean)
+                isToggled = state
+                updateVisuals()
+                callback(isToggled)
+            end
+            return toggleObj
         end
  
         function Elements:AddTickButton(config)
@@ -1438,10 +1465,10 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
             
-            -- // STATIC CLICK INDICATOR (MANDATORY)
+            -- // STATIC CLICK INDICATOR (MANDATORY) - MADE BIGGER
             local ClickIndicator = Instance.new("ImageLabel")
             ClickIndicator.Name = "ClickIndicator"
-            ClickIndicator.Size = UDim2.fromOffset(28, 28)
+            ClickIndicator.Size = UDim2.fromOffset(34, 34)
             ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
             ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
             ClickIndicator.BackgroundTransparency = 1
@@ -1459,6 +1486,68 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.MouseButton1Down:Connect(function() TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
             t.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
             t.MouseButton1Click:Connect(callback)
+            return ApplyLocking(frame)
+        end
+
+        function Elements:AddModuleReview(config)
+            local title = config.Title
+            local desc = config.Description
+            local side = config.Side
+            local callback = config.Callback
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 100)
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
+
+            local icon = Instance.new("ImageLabel")
+            icon.Size = UDim2.fromOffset(32, 32)
+            icon.Position = UDim2.new(0, 15, 0, 15)
+            icon.BackgroundTransparency = 1
+            icon.Image = ReviewIconID
+            icon.ImageColor3 = Theme.Accent
+            icon.Parent = frame
+
+            local label = Instance.new("TextLabel")
+            label.Text = title
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 16
+            label.TextColor3 = Theme.TextPrimary
+            label.Position = UDim2.new(0, 55, 0, 15)
+            label.Size = UDim2.new(1, -70, 0, 20)
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.BackgroundTransparency = 1
+            label.Parent = frame
+
+            local sub = Instance.new("TextLabel")
+            sub.Text = desc
+            sub.Font = Enum.Font.Gotham
+            sub.TextSize = 12
+            sub.TextColor3 = Theme.TextSec
+            sub.Position = UDim2.new(0, 55, 0, 35)
+            sub.Size = UDim2.new(1, -70, 0, 30)
+            sub.TextXAlignment = Enum.TextXAlignment.Left
+            sub.TextWrapped = true
+            sub.BackgroundTransparency = 1
+            sub.Parent = frame
+
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -30, 0, 28)
+            btn.Position = UDim2.new(0, 15, 1, -35)
+            btn.BackgroundColor3 = Theme.Accent
+            btn.Text = "REVIEW MODULE"
+            btn.Font = Enum.Font.GothamBold
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            btn.TextSize = 11
+            btn.Parent = frame
+            Corner(6, btn)
+            table.insert(ThemeRegistry.Accents, btn)
+
+            btn.MouseButton1Click:Connect(callback)
             return ApplyLocking(frame)
         end
  
