@@ -29,7 +29,6 @@ local Theme = {
 local LockIconID = "rbxassetid://17783082088"
 local ClickIconID = "rbxassetid://9468220156"
 local SelectorIconID = "rbxassetid://103256317191387"
-local ReviewIconID = "rbxassetid://11326670020"
  
 if CoreGui:FindFirstChild("Astral_UI_V9") then
     CoreGui.Astral_UI_V9:Destroy()
@@ -1488,68 +1487,6 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.MouseButton1Click:Connect(callback)
             return ApplyLocking(frame)
         end
-
-        function Elements:AddModuleReview(config)
-            local title = config.Title
-            local desc = config.Description
-            local side = config.Side
-            local callback = config.Callback
-
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, 0, 0, 100)
-            frame.BackgroundColor3 = Theme.Card
-            frame.BackgroundTransparency = 0.15
-            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
-            Corner(10, frame)
-            Stroke(Theme.Border, 1, frame)
-            AddSubtleOutline(frame)
-
-            local icon = Instance.new("ImageLabel")
-            icon.Size = UDim2.fromOffset(32, 32)
-            icon.Position = UDim2.new(0, 15, 0, 15)
-            icon.BackgroundTransparency = 1
-            icon.Image = ReviewIconID
-            icon.ImageColor3 = Theme.Accent
-            icon.Parent = frame
-
-            local label = Instance.new("TextLabel")
-            label.Text = title
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 16
-            label.TextColor3 = Theme.TextPrimary
-            label.Position = UDim2.new(0, 55, 0, 15)
-            label.Size = UDim2.new(1, -70, 0, 20)
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.BackgroundTransparency = 1
-            label.Parent = frame
-
-            local sub = Instance.new("TextLabel")
-            sub.Text = desc
-            sub.Font = Enum.Font.Gotham
-            sub.TextSize = 12
-            sub.TextColor3 = Theme.TextSec
-            sub.Position = UDim2.new(0, 55, 0, 35)
-            sub.Size = UDim2.new(1, -70, 0, 30)
-            sub.TextXAlignment = Enum.TextXAlignment.Left
-            sub.TextWrapped = true
-            sub.BackgroundTransparency = 1
-            sub.Parent = frame
-
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, -30, 0, 28)
-            btn.Position = UDim2.new(0, 15, 1, -35)
-            btn.BackgroundColor3 = Theme.Accent
-            btn.Text = "REVIEW MODULE"
-            btn.Font = Enum.Font.GothamBold
-            btn.TextColor3 = Color3.new(1, 1, 1)
-            btn.TextSize = 11
-            btn.Parent = frame
-            Corner(6, btn)
-            table.insert(ThemeRegistry.Accents, btn)
-
-            btn.MouseButton1Click:Connect(callback)
-            return ApplyLocking(frame)
-        end
  
         function Elements:AddCombinButton(config)
             local title = config.Title
@@ -1780,7 +1717,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0, 22)
             label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -140, 0, 20)
+            label.Size = UDim2.new(1, -160, 0, 20) -- Fixed overlap by increasing offset
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
             label.TextWrapped = true
@@ -2453,11 +2390,11 @@ function AstralLib:CreateWindow(titleText, versionText)
             local label = Instance.new("TextLabel")
             label.Text = title
             label.Font = Enum.Font.GothamBold
-            label.TextSize = 14 -- Consistent with other buttons
+            label.TextSize = 14
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0.5, 0)
             label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -195, 0, 40)
+            label.Size = UDim2.new(1, -205, 0, 40) -- Fixed overlap by increasing offset
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
             label.TextTruncate = Enum.TextTruncate.AtEnd
