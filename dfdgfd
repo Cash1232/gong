@@ -20,12 +20,15 @@ local Theme = {
     Border = Color3.fromRGB(45, 45, 48),
     Accent = Color3.fromRGB(0, 122, 255),
     Purple = Color3.fromRGB(100, 80, 255),
+    NeonGreen = Color3.fromRGB(50, 255, 50), -- Vibrant Super Clean Green
     TextPrimary = Color3.fromRGB(255, 255, 255),
     TextSec = Color3.fromRGB(150, 150, 150),
     Knob = Color3.fromRGB(255, 255, 255)
 }
  
 local LockIconID = "rbxassetid://17783082088"
+local ClickIconID = "rbxassetid://9468220156"
+local SelectorIconID = "rbxassetid://103256317191387"
  
 if CoreGui:FindFirstChild("Astral_UI_V9") then
     CoreGui.Astral_UI_V9:Destroy()
@@ -45,6 +48,12 @@ local function Stroke(color: Color3, thickness: number, parent: Instance)
     s.Thickness = thickness
     s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     s.Parent = parent
+    return s
+end
+
+local function AddSubtleOutline(parent: Instance)
+    local s = Stroke(Color3.new(1, 1, 1), 1, parent)
+    s.Transparency = 0.92
     return s
 end
  
@@ -681,6 +690,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = TabContent
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local pad = Instance.new("UIPadding", frame)
             pad.PaddingLeft = UDim.new(0, 15); pad.PaddingRight = UDim.new(0, 15)
             pad.PaddingTop = UDim.new(0, 12); pad.PaddingBottom = UDim.new(0, 12)
@@ -721,6 +731,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = TabContent
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local graphics = Instance.new("Frame")
             graphics.Size = UDim2.new(1, 0, 0, 80)
             graphics.BackgroundTransparency = 1
@@ -774,6 +785,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local TitleLabel = Instance.new("TextLabel")
             TitleLabel.Size = UDim2.new(1, -20, 0, 25)
@@ -928,6 +940,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -935,7 +948,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
  
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.95, 0.95)
@@ -1010,13 +1023,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1072,6 +1086,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = TabContent
             Corner(10, frame)
             local mainStroke = Stroke(Color3.fromRGB(40, 40, 45), 1, frame)
+            AddSubtleOutline(frame)
             local banner = Instance.new("ImageLabel")
             banner.Size = UDim2.new(1, 0, 0, 95)
             banner.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -1230,13 +1245,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1303,6 +1319,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -1310,7 +1327,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
  
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
@@ -1378,6 +1395,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local Scale = Instance.new("UIScale", frame)
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -1385,7 +1403,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1427,7 +1445,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
             ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
             ClickIndicator.BackgroundTransparency = 1
-            ClickIndicator.Image = "rbxassetid://123042737626028"
+            ClickIndicator.Image = ClickIconID
             ClickIndicator.ImageColor3 = Theme.TextPrimary
             ClickIndicator.ZIndex = 2
             ClickIndicator.Parent = frame
@@ -1457,6 +1475,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local pad = Instance.new("UIPadding", frame)
             pad.PaddingLeft = UDim.new(0, 15); pad.PaddingRight = UDim.new(0, 15)
@@ -1517,6 +1536,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local pad = Instance.new("UIPadding", frame)
             pad.PaddingLeft = UDim.new(0, 10); pad.PaddingRight = UDim.new(0, 10)
@@ -1577,13 +1597,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1645,6 +1666,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -1652,7 +1674,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
  
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.5, 0.5)
@@ -1773,13 +1795,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
             ibg.Position = UDim2.new(0, 12, 0.5, 0)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
             icon.Position = UDim2.fromScale(0.5, 0.5)
@@ -1814,14 +1837,14 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
 
-            -- // STATIC CLICK INDICATOR (MANDATORY)
+            -- // SELECTOR ICON (MANDATORY)
             local ClickIndicator = Instance.new("ImageLabel")
             ClickIndicator.Name = "ClickIndicator"
             ClickIndicator.Size = UDim2.fromOffset(28, 28)
             ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
             ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
             ClickIndicator.BackgroundTransparency = 1
-            ClickIndicator.Image = "rbxassetid://123042737626028"
+            ClickIndicator.Image = SelectorIconID
             ClickIndicator.ImageColor3 = Theme.TextPrimary
             ClickIndicator.ZIndex = 2
             ClickIndicator.Parent = frame
@@ -1854,38 +1877,45 @@ function AstralLib:CreateWindow(titleText, versionText)
             Panel.Active = true
             Panel.Parent = MainFrame
             Stroke(Theme.Border, 1, Panel)
+
+            -- // INTEGRATED SEARCH BAR (IMAGE 9 STYLE)
             local SearchFrame = Instance.new("Frame")
-            SearchFrame.Size = UDim2.new(1, -20, 0, 35)
-            SearchFrame.Position = UDim2.new(0, 10, 0, 15)
-            SearchFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            SearchFrame.Size = UDim2.new(1, 0, 0, 45)
+            SearchFrame.Position = UDim2.new(0, 0, 0, 0)
+            SearchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
             SearchFrame.ZIndex = 502
             SearchFrame.Parent = Panel
-            Corner(6, SearchFrame)
+            
+            local SearchGlow = Stroke(Theme.NeonGreen, 1, SearchFrame)
+            SearchGlow.Transparency = 0.85
+
             local SearchIcon = Instance.new("ImageLabel")
-            SearchIcon.Size = UDim2.fromOffset(16, 16)
-            SearchIcon.Position = UDim2.new(0, 10, 0.5, 0)
+            SearchIcon.Size = UDim2.fromOffset(18, 18)
+            SearchIcon.Position = UDim2.new(0, 15, 0.5, 0)
             SearchIcon.AnchorPoint = Vector2.new(0, 0.5)
             SearchIcon.Image = "rbxassetid://6031154871"
             SearchIcon.BackgroundTransparency = 1
-            SearchIcon.ImageColor3 = Theme.TextSec
+            SearchIcon.ImageColor3 = Theme.TextPrimary
             SearchIcon.ZIndex = 503
             SearchIcon.Parent = SearchFrame
+
             local SearchBox = Instance.new("TextBox")
-            SearchBox.Size = UDim2.new(1, -40, 1, 0)
-            SearchBox.Position = UDim2.new(0, 35, 0, 0)
+            SearchBox.Size = UDim2.new(1, -50, 1, 0)
+            SearchBox.Position = UDim2.new(0, 45, 0, 0)
             SearchBox.BackgroundTransparency = 1
             SearchBox.Text = ""
             SearchBox.PlaceholderText = "Search Here..."
             SearchBox.TextColor3 = Theme.TextPrimary
             SearchBox.PlaceholderColor3 = Theme.TextSec
             SearchBox.Font = Enum.Font.GothamMedium
-            SearchBox.TextSize = 12
+            SearchBox.TextSize = 13
             SearchBox.TextXAlignment = Enum.TextXAlignment.Left
             SearchBox.ZIndex = 503
             SearchBox.Parent = SearchFrame
+
             local List = Instance.new("ScrollingFrame")
-            List.Size = UDim2.new(1, 0, 1, -65)
-            List.Position = UDim2.new(0, 0, 0, 65)
+            List.Size = UDim2.new(1, 0, 1, -45)
+            List.Position = UDim2.new(0, 0, 0, 45)
             List.BackgroundTransparency = 1
             List.ScrollBarThickness = 2
             List.ScrollBarImageColor3 = Theme.Accent
@@ -1895,7 +1925,9 @@ function AstralLib:CreateWindow(titleText, versionText)
  
             local ListLayout = Instance.new("UIListLayout")
             ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            ListLayout.Padding = UDim.new(0, 0) -- SEAMLESS LIST
             ListLayout.Parent = List
+
             local function UpdateList()
                 for _, child in ipairs(List:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
                 for _, optData in ipairs(options) do
@@ -1914,16 +1946,16 @@ function AstralLib:CreateWindow(titleText, versionText)
                         btn.ZIndex = 504
                         btn.Parent = List
  
+                        -- // NEON GREEN INDICATOR (IMAGE 9 STYLE)
                         local indicator = Instance.new("Frame")
-                        indicator.Size = UDim2.new(0, 3, 0, 22)
-                        indicator.Position = UDim2.new(0, 5, 0.5, 0)
+                        indicator.Size = UDim2.new(0, 3, 0, 24)
+                        indicator.Position = UDim2.new(0, 0, 0.5, 0)
                         indicator.AnchorPoint = Vector2.new(0, 0.5)
-                        indicator.BackgroundColor3 = Theme.Accent
+                        indicator.BackgroundColor3 = Theme.NeonGreen
                         indicator.Visible = isSelected ~= nil
                         indicator.ZIndex = 505
                         indicator.Parent = btn
-                        Corner(2, indicator)
-                        table.insert(ThemeRegistry.Accents, indicator)
+                        Corner(0, indicator)
  
                         local textOffset = 20
                         if optIcon then
@@ -2005,6 +2037,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
             
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -2012,7 +2045,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
             
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.7, 0.7)
@@ -2309,6 +2342,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
  
             local ibg = Instance.new("Frame")
             ibg.Size = UDim2.fromOffset(60, 60)
@@ -2316,7 +2350,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             ibg.AnchorPoint = Vector2.new(0, 0.5)
             ibg.BackgroundColor3 = Theme.IconBg
             ibg.Parent = frame
-            Corner(10, ibg)
+            Corner(8, ibg)
  
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.fromScale(0.6, 0.6)
