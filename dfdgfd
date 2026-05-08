@@ -1400,7 +1400,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.TextColor3 = Theme.TextPrimary
             label.Position = UDim2.new(0, 82, 0.5, -10)
             label.AnchorPoint = Vector2.new(0, 0.5)
-            label.Size = UDim2.new(1, -92, 0, 20)
+            label.Size = UDim2.new(1, -125, 0, 20)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.BackgroundTransparency = 1
             label.TextWrapped = true
@@ -1413,16 +1413,30 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.TextColor3 = Theme.TextSec
             subLabel.Position = UDim2.new(0, 82, 0.5, 10)
             subLabel.AnchorPoint = Vector2.new(0, 0.5)
-            subLabel.Size = UDim2.new(1, -92, 0, 20)
+            subLabel.Size = UDim2.new(1, -125, 0, 20)
             subLabel.TextXAlignment = Enum.TextXAlignment.Left
             subLabel.BackgroundTransparency = 1
             subLabel.TextWrapped = true
             subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
+            
+            -- // STATIC CLICK INDICATOR (MANDATORY)
+            local ClickIndicator = Instance.new("ImageLabel")
+            ClickIndicator.Name = "ClickIndicator"
+            ClickIndicator.Size = UDim2.fromOffset(24, 24)
+            ClickIndicator.Position = UDim2.new(1, -15, 0.5, 0)
+            ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
+            ClickIndicator.BackgroundTransparency = 1
+            ClickIndicator.Image = "rbxassetid://9468220156"
+            ClickIndicator.ImageColor3 = Theme.TextPrimary
+            ClickIndicator.ZIndex = 2
+            ClickIndicator.Parent = frame
+
             local t = Instance.new("TextButton")
             t.Size = UDim2.fromScale(1, 1)
             t.BackgroundTransparency = 1
             t.Text = ""
+            t.ZIndex = 5
             t.Parent = frame
             t.MouseButton1Down:Connect(function() TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
             t.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
