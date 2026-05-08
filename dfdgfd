@@ -1423,11 +1423,11 @@ function AstralLib:CreateWindow(titleText, versionText)
             -- // STATIC CLICK INDICATOR (MANDATORY)
             local ClickIndicator = Instance.new("ImageLabel")
             ClickIndicator.Name = "ClickIndicator"
-            ClickIndicator.Size = UDim2.fromOffset(24, 24)
-            ClickIndicator.Position = UDim2.new(1, -15, 0.5, 0)
+            ClickIndicator.Size = UDim2.fromOffset(28, 28)
+            ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
             ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
             ClickIndicator.BackgroundTransparency = 1
-            ClickIndicator.Image = "rbxassetid://9468220156"
+            ClickIndicator.Image = "rbxassetid://123042737626028"
             ClickIndicator.ImageColor3 = Theme.TextPrimary
             ClickIndicator.ZIndex = 2
             ClickIndicator.Parent = frame
@@ -1813,6 +1813,18 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.TextWrapped = true
             subLabel.TextTruncate = Enum.TextTruncate.AtEnd
             subLabel.Parent = frame
+
+            -- // STATIC CLICK INDICATOR (MANDATORY)
+            local ClickIndicator = Instance.new("ImageLabel")
+            ClickIndicator.Name = "ClickIndicator"
+            ClickIndicator.Size = UDim2.fromOffset(28, 28)
+            ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
+            ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
+            ClickIndicator.BackgroundTransparency = 1
+            ClickIndicator.Image = "rbxassetid://123042737626028"
+            ClickIndicator.ImageColor3 = Theme.TextPrimary
+            ClickIndicator.ZIndex = 2
+            ClickIndicator.Parent = frame
  
             local function updateSubLabel()
                 if #selected == 0 then
