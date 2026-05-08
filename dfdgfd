@@ -295,6 +295,7 @@ function AstralLib:CreateWindow(titleText, versionText)
  
     local ActiveBadge = CreateBadge("BETA", Theme.Accent, Theme.TextPrimary, TopBar)
     ActiveBadge.Position = UDim2.new(0, 155, 0.5, -12)
+    ActiveBadge.Visible = false -- Default to hidden until set
     table.insert(ThemeRegistry.Accents, ActiveBadge)
  
     Arrows.Size = UDim2.new(0, 350, 1, 0)
@@ -410,6 +411,15 @@ function AstralLib:CreateWindow(titleText, versionText)
 
     function Window:SetMinimizeIcon(iconId: string)
         MinimizeBtn.Image = iconId
+    end
+
+    function Window:SetBadge(config)
+        ActiveBadge.Visible = config.Visible ~= nil and config.Visible or true
+        local label = ActiveBadge:FindFirstChildOfClass("TextLabel")
+        if label then
+            label.Text = config.Text or "BETA"
+        end
+        ActiveBadge.BackgroundColor3 = config.Color or Theme.Accent
     end
 
     function Window:AddStopTweenButton(config)
@@ -1739,7 +1749,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             Stroke(Theme.Border, 1, valBox)
  
             local SliderBG = Instance.new("Frame")
-            SliderBG.Size = UDim2.new(1, -95, 0, 14)
+            SliderBG.Size = UDim2.new(1, -95, 0, 18) -- Increased from 14
             SliderBG.Position = UDim2.new(0, 82, 0.5, 12)
             SliderBG.AnchorPoint = Vector2.new(0, 0.5)
             SliderBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -1754,7 +1764,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             table.insert(ThemeRegistry.Accents, Progress)
  
             local knob = Instance.new("Frame")
-            knob.Size = UDim2.new(0, 12, 0, 24)
+            knob.Size = UDim2.new(0, 14, 0, 28) -- Increased from 12, 24
             knob.Position = UDim2.fromScale((default - min) / (max - min), 0.5)
             knob.AnchorPoint = Vector2.new(0.5, 0.5)
             knob.BackgroundColor3 = Theme.Knob
