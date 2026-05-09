@@ -627,14 +627,15 @@ function AstralLib:CreateWindow(titleText, versionText)
         local elementOrder = 0
  
         local function ApplyLocking(parent: Frame)
+            local isLocked = false
             local LockOverlay = Instance.new("Frame")
             LockOverlay.Name = "LockOverlay"
             LockOverlay.Size = UDim2.fromScale(1, 1)
             LockOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
             LockOverlay.BackgroundTransparency = 0.35
-            LockOverlay.ZIndex = 100
+            LockOverlay.ZIndex = 1000 -- High ZIndex to physically block input
             LockOverlay.Visible = false
-            LockOverlay.Active = true
+            LockOverlay.Active = true -- Sinks input
             LockOverlay.Parent = parent
             Corner(10, LockOverlay)
  
@@ -668,7 +669,11 @@ function AstralLib:CreateWindow(titleText, versionText)
  
             return {
                 SetLocked = function(self, state: boolean)
+                    isLocked = state
                     LockOverlay.Visible = state
+                end,
+                IsLocked = function(self)
+                    return isLocked
                 end
             }
         end
@@ -974,10 +979,18 @@ function AstralLib:CreateWindow(titleText, versionText)
                 end
             end
  
-            LoadBtn.MouseButton1Click:Connect(LoadModel)
-            UnloadBtn.MouseButton1Click:Connect(function() if currentModel then currentModel:Destroy() currentModel = nil end end)
+            local lockControl;
+            LoadBtn.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
+                LoadModel()
+            end)
+            UnloadBtn.MouseButton1Click:Connect(function() 
+                if lockControl and lockControl:IsLocked() then return end
+                if currentModel then currentModel:Destroy() currentModel = nil end 
+            end)
  
-            return ApplyLocking(frame)
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddStatusCard(config)
@@ -1236,7 +1249,10 @@ function AstralLib:CreateWindow(titleText, versionText)
                     end
                 end
             end)
+
+            local lockControl;
             btn.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
                 local INVITE_LINK = "https://discord.gg/" .. InviteCode
                 
                 -- Copy to clipboard
@@ -1282,7 +1298,9 @@ function AstralLib:CreateWindow(titleText, versionText)
                 btn.Text = "Join"
                 btn.BackgroundColor3 = Color3.fromRGB(35, 165, 90)
             end)
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddToggle(config)
@@ -1349,7 +1367,9 @@ function AstralLib:CreateWindow(titleText, versionText)
                 TweenService:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {BackgroundColor3 = isToggled and Theme.Accent or Theme.Border}):Play()
             end
  
+            local lockControl;
             btn.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
                 isToggled = not isToggled
                 updateVisuals()
                 callback(isToggled)
@@ -1357,13 +1377,13 @@ function AstralLib:CreateWindow(titleText, versionText)
  
             table.insert(ThemeRegistry.TickButtons, {Instance = btn, GetChecked = function() return isToggled end})
             
-            local toggleObj = ApplyLocking(frame)
-            function toggleObj:SetState(state: boolean)
+            lockControl = ApplyLocking(frame)
+            function lockControl:SetState(state: boolean)
                 isToggled = state
                 updateVisuals()
                 callback(isToggled)
             end
-            return toggleObj
+            return lockControl
         end
  
         function Elements:AddTickButton(config)
@@ -1431,7 +1451,9 @@ function AstralLib:CreateWindow(titleText, versionText)
             checkIcon.ImageTransparency = 1
             checkIcon.Parent = tickBox
  
+            local lockControl;
             tickBox.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
                 isChecked = not isChecked
                 TweenService:Create(tickBox, TweenInfo.new(0.2), {BackgroundColor3 = isChecked and Theme.Accent or Color3.fromRGB(30, 30, 35)}):Play()
                 TweenService:Create(checkIcon, TweenInfo.new(0.2), {ImageTransparency = isChecked and 0 or 1}):Play()
@@ -1439,7 +1461,9 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
             
             table.insert(ThemeRegistry.TickButtons, {Instance = tickBox, GetChecked = function() return isChecked end})
-            return ApplyLocking(frame)
+            
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddButton(config)
@@ -1517,10 +1541,25 @@ function AstralLib:CreateWindow(titleText, versionText)
             t.Text = ""
             t.ZIndex = 5
             t.Parent = frame
-            t.MouseButton1Down:Connect(function() TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
-            t.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
-            t.MouseButton1Click:Connect(callback)
-            return ApplyLocking(frame)
+
+            local lockControl;
+            t.MouseButton1Down:Connect(function() 
+                if lockControl and lockControl:IsLocked() then return end
+                TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 0.95}):Play() 
+            end)
+            t.InputEnded:Connect(function(input) 
+                if lockControl and lockControl:IsLocked() then return end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+                    TweenService:Create(Scale, TweenInfo.new(0.1), {Scale = 1}):Play() 
+                end 
+            end)
+            t.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
+                callback()
+            end)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddCombinButton(config)
@@ -1565,6 +1604,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             grid.SortOrder = Enum.SortOrder.LayoutOrder
             grid.Parent = container
  
+            local lockControl;
             for i, btnData in ipairs(buttons) do
                 local b = Instance.new("TextButton")
                 b.BackgroundColor3 = Theme.Accent
@@ -1577,11 +1617,24 @@ function AstralLib:CreateWindow(titleText, versionText)
                 table.insert(ThemeRegistry.Accents, b)
  
                 local bScale = Instance.new("UIScale", b)
-                b.MouseButton1Down:Connect(function() TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
-                b.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
-                b.MouseButton1Click:Connect(btnData.Callback)
+                b.MouseButton1Down:Connect(function() 
+                    if lockControl and lockControl:IsLocked() then return end
+                    TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() 
+                end)
+                b.InputEnded:Connect(function(input) 
+                    if lockControl and lockControl:IsLocked() then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+                        TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() 
+                    end 
+                end)
+                b.MouseButton1Click:Connect(function()
+                    if lockControl and lockControl:IsLocked() then return end
+                    btnData.Callback()
+                end)
             end
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddCombinButtonCompact(config)
@@ -1626,6 +1679,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             grid.SortOrder = Enum.SortOrder.LayoutOrder
             grid.Parent = container
  
+            local lockControl;
             for i, btnData in ipairs(buttons) do
                 local b = Instance.new("TextButton")
                 b.BackgroundColor3 = Theme.Accent
@@ -1638,11 +1692,24 @@ function AstralLib:CreateWindow(titleText, versionText)
                 table.insert(ThemeRegistry.Accents, b)
  
                 local bScale = Instance.new("UIScale", b)
-                b.MouseButton1Down:Connect(function() TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() end)
-                b.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() end end)
-                b.MouseButton1Click:Connect(btnData.Callback)
+                b.MouseButton1Down:Connect(function() 
+                    if lockControl and lockControl:IsLocked() then return end
+                    TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 0.95}):Play() 
+                end)
+                b.InputEnded:Connect(function(input) 
+                    if lockControl and lockControl:IsLocked() then return end
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+                        TweenService:Create(bScale, TweenInfo.new(0.1), {Scale = 1}):Play() 
+                    end 
+                end)
+                b.MouseButton1Click:Connect(function()
+                    if lockControl and lockControl:IsLocked() then return end
+                    btnData.Callback()
+                end)
             end
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddTextBox(config)
@@ -1707,8 +1774,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             box.TextXAlignment = Enum.TextXAlignment.Left
             box.ClearTextOnFocus = false
             box.Parent = inputFrame
-            box.FocusLost:Connect(function(enter) if enter then callback(box.Text) end end)
-            return ApplyLocking(frame)
+
+            local lockControl;
+            box.FocusLost:Connect(function(enter) 
+                if lockControl and lockControl:IsLocked() then return end
+                if enter then callback(box.Text) end 
+            end)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddSlider(config)
@@ -1806,7 +1880,9 @@ function AstralLib:CreateWindow(titleText, versionText)
                 callback(val)
             end
  
+            local lockControl;
             valBox.FocusLost:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
                 local val = tonumber(valBox.Text)
                 if val then
                     val = math.clamp(val, min, max)
@@ -1822,12 +1898,14 @@ function AstralLib:CreateWindow(titleText, versionText)
  
             local dragging = false
             SliderBG.InputBegan:Connect(function(input) 
+                if lockControl and lockControl:IsLocked() then return end
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
                     dragging = true 
                     update(input.Position) 
                 end 
             end)
             UserInputService.InputChanged:Connect(function(input) 
+                if lockControl and lockControl:IsLocked() then return end
                 if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
                     update(input.Position) 
                 end 
@@ -1837,7 +1915,9 @@ function AstralLib:CreateWindow(titleText, versionText)
                     dragging = false 
                 end 
             end)
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddSelector(config)
@@ -2076,9 +2156,16 @@ function AstralLib:CreateWindow(titleText, versionText)
             trigger.BackgroundTransparency = 1
             trigger.Text = ""
             trigger.Parent = frame
-            trigger.MouseButton1Click:Connect(function() TogglePanel(true) end)
+
+            local lockControl;
+            trigger.MouseButton1Click:Connect(function() 
+                if lockControl and lockControl:IsLocked() then return end
+                TogglePanel(true) 
+            end)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddColorPicker(config)
@@ -2383,9 +2470,15 @@ function AstralLib:CreateWindow(titleText, versionText)
             
             ApplyBtn.MouseButton1Click:Connect(function() ColorSquare.BackgroundColor3 = currentColor callback(currentColor) TogglePanel(false) end)
             CancelBtn.MouseButton1Click:Connect(function() currentColor = originalColor h, s, v = Color3.toHSV(currentColor) UpdateVisuals(true) TogglePanel(false) end)
-            ColorSquare.MouseButton1Click:Connect(function() TogglePanel(true) end)
             
-            return ApplyLocking(frame)
+            local lockControl;
+            ColorSquare.MouseButton1Click:Connect(function() 
+                if lockControl and lockControl:IsLocked() then return end
+                TogglePanel(true) 
+            end)
+            
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
         function Elements:AddKeybind(config)
@@ -2454,7 +2547,9 @@ function AstralLib:CreateWindow(titleText, versionText)
             bindText.TextSize = 13
             bindText.Parent = bindBtn
  
+            local lockControl;
             bindBtn.MouseButton1Click:Connect(function()
+                if lockControl and lockControl:IsLocked() then return end
                 binding = true
                 bindText.Text = "..."
             end)
@@ -2467,12 +2562,14 @@ function AstralLib:CreateWindow(titleText, versionText)
                     callback(currentBind)
                 end
             end)
-            return ApplyLocking(frame)
+
+            lockControl = ApplyLocking(frame)
+            return lockControl
         end
  
     return Elements
     end
     return Window
 end
-
+ 
 return AstralLib
