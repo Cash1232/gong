@@ -750,10 +750,12 @@ function AstralLib:CreateWindow(titleText, versionText)
         function Elements:AddPreview(config)
             local title = config.Title
             local content = config.Content
+            local imageId = config.Image -- Optional Banner/Image
             
             elementOrder = elementOrder + 1
             local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1, -5, 0, 140)
+            frame.Size = UDim2.new(1, -5, 0, 0)
+            frame.AutomaticSize = Enum.AutomaticSize.Y
             frame.BackgroundColor3 = Theme.Card
             frame.BackgroundTransparency = 0.15
             frame.LayoutOrder = elementOrder
@@ -761,43 +763,66 @@ function AstralLib:CreateWindow(titleText, versionText)
             Corner(10, frame)
             Stroke(Theme.Border, 1, frame)
             AddSubtleOutline(frame)
-            local graphics = Instance.new("Frame")
-            graphics.Size = UDim2.new(1, 0, 0, 80)
-            graphics.BackgroundTransparency = 1
-            graphics.Parent = frame
-            local pill = Instance.new("Frame")
-            pill.Size = UDim2.new(0, 80, 0, 30)
-            pill.Position = UDim2.new(0, 30, 0.5, -15)
-            pill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-            pill.Parent = graphics
-            Corner(15, pill)
-            local arc = Instance.new("ImageLabel")
-            arc.Size = UDim2.new(0, 140, 0, 70)
-            arc.Position = UDim2.new(0, 130, 0.5, -5)
-            arc.BackgroundTransparency = 1
-            arc.Image = "rbxassetid://12523411499"
-            arc.ImageColor3 = Color3.fromRGB(180, 180, 180)
-            arc.Parent = graphics
+
+            local MainLayout = Instance.new("UIListLayout")
+            MainLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            MainLayout.Padding = UDim.new(0, 12)
+            MainLayout.Parent = frame
+
+            -- // GRAPHICS SECTION (BANNER)
+            local banner = Instance.new("ImageLabel")
+            banner.Name = "Banner"
+            banner.Size = UDim2.new(1, 0, 0, 100)
+            banner.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+            banner.Image = imageId or "rbxassetid://12523411499" -- Default placeholder if none
+            banner.ScaleType = Enum.ScaleType.Crop
+            banner.LayoutOrder = 1
+            banner.Parent = frame
+            Corner(10, banner)
+
+            -- // TEXT CONTAINER (FIXES OVERLAP)
+            local textContainer = Instance.new("Frame")
+            textContainer.Size = UDim2.new(1, 0, 0, 0)
+            textContainer.AutomaticSize = Enum.AutomaticSize.Y
+            textContainer.BackgroundTransparency = 1
+            textContainer.LayoutOrder = 2
+            textContainer.Parent = frame
+
+            local textPadding = Instance.new("UIPadding")
+            textPadding.PaddingLeft = UDim.new(0, 15)
+            textPadding.PaddingRight = UDim.new(0, 15)
+            textPadding.PaddingBottom = UDim.new(0, 15)
+            textPadding.Parent = textContainer
+
+            local textLayout = Instance.new("UIListLayout")
+            textLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            textLayout.Padding = UDim.new(0, 4)
+            textLayout.Parent = textContainer
+
             local t = Instance.new("TextLabel")
             t.Text = title
             t.Font = Enum.Font.GothamBold
             t.TextColor3 = Theme.TextPrimary
             t.TextSize = 18
-            t.Position = UDim2.new(0, 15, 0, 85)
-            t.Size = UDim2.new(1, -30, 0, 22)
+            t.Size = UDim2.new(1, 0, 0, 22)
             t.BackgroundTransparency = 1
             t.TextXAlignment = Enum.TextXAlignment.Left
-            t.Parent = frame
+            t.LayoutOrder = 1
+            t.Parent = textContainer
+
             local c = Instance.new("TextLabel")
             c.Text = content
             c.Font = Enum.Font.Gotham
             c.TextColor3 = Theme.TextSec
             c.TextSize = 13
-            c.Position = UDim2.new(0, 15, 0, 107)
-            c.Size = UDim2.new(1, -30, 0, 18)
+            c.Size = UDim2.new(1, 0, 0, 0)
+            c.AutomaticSize = Enum.AutomaticSize.Y
             c.BackgroundTransparency = 1
             c.TextXAlignment = Enum.TextXAlignment.Left
-            c.Parent = frame
+            c.TextWrapped = true
+            c.LayoutOrder = 2
+            c.Parent = textContainer
+
             return ApplyLocking(frame)
         end
  
@@ -1871,7 +1896,7 @@ function AstralLib:CreateWindow(titleText, versionText)
             subLabel.BackgroundTransparency = 1
             subLabel.TextWrapped = true
             subLabel.TextTruncate = Enum.TextTruncate.AtEnd
-            subLabel.Parent = frame
+            label.Parent = frame
 
             -- // SELECTOR ICON (MANDATORY)
             local ClickIndicator = Instance.new("ImageLabel")
@@ -2449,5 +2474,5 @@ function AstralLib:CreateWindow(titleText, versionText)
     end
     return Window
 end
- 
+
 return AstralLib
