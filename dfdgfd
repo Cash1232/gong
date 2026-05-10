@@ -1,4 +1,3 @@
---!strict
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -420,6 +419,18 @@ function AstralLib:CreateWindow(titleText, versionText)
             label.Text = config.Text or "BETA"
         end
         ActiveBadge.BackgroundColor3 = config.Color or Theme.Accent
+    end
+
+    function Window:SetTitle(text: string)
+        Title.Text = text
+    end
+
+    function Window:SetVisible(bool: boolean)
+        MainFrame.Visible = bool
+    end
+
+    function Window:Destroy()
+        ScreenGui:Destroy()
     end
 
     function Window:AddStopTweenButton(config)
@@ -1378,11 +1389,27 @@ function AstralLib:CreateWindow(titleText, versionText)
             table.insert(ThemeRegistry.TickButtons, {Instance = btn, GetChecked = function() return isToggled end})
             
             lockControl = ApplyLocking(frame)
+            
             function lockControl:SetState(state: boolean)
                 isToggled = state
                 updateVisuals()
                 callback(isToggled)
             end
+
+            function lockControl:SetValue(state: boolean)
+                isToggled = state
+                updateVisuals()
+                callback(isToggled)
+            end
+
+            function lockControl:SetTitle(text: string)
+                label.Text = text
+            end
+
+            function lockControl:SetVisible(bool: boolean)
+                frame.Visible = bool
+            end
+
             return lockControl
         end
  
@@ -1917,6 +1944,24 @@ function AstralLib:CreateWindow(titleText, versionText)
             end)
 
             lockControl = ApplyLocking(frame)
+
+            function lockControl:SetValue(val: number)
+                val = math.clamp(val, min, max)
+                local pos = (val - min) / (max - min)
+                valBox.Text = tostring(val)
+                TweenService:Create(Progress, TweenInfo.new(0.2), {Size = UDim2.fromScale(pos, 1)}):Play()
+                TweenService:Create(knob, TweenInfo.new(0.2), {Position = UDim2.fromScale(pos, 0.5)}):Play()
+                callback(val)
+            end
+
+            function lockControl:SetTitle(text: string)
+                label.Text = text
+            end
+
+            function lockControl:SetVisible(bool: boolean)
+                frame.Visible = bool
+            end
+
             return lockControl
         end
  
@@ -2165,6 +2210,47 @@ function AstralLib:CreateWindow(titleText, versionText)
             Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
 
             lockControl = ApplyLocking(frame)
+
+            function lockControl:SetValue(val: any)
+                if type(val) == "table" then
+                    selected = val
+                else
+                    selected = {val}
+                end
+                updateSubLabel()
+                UpdateList()
+                callback(selected)
+            end
+
+            function lockControl:SetTitle(text: string)
+                label.Text = text
+            end
+
+            function lockControl:SetVisible(bool: boolean)
+                frame.Visible = bool
+            end
+
+            function lockControl:AddOption(opt: string)
+                table.insert(options, opt)
+                UpdateList()
+            end
+
+            function lockControl:RemoveOption(opt: string)
+                for i, v in ipairs(options) do
+                    local name = type(v) == "table" and v.Name or v
+                    if name == opt then
+                        table.remove(options, i)
+                        break
+                    end
+                end
+                UpdateList()
+            end
+
+            function lockControl:SetOptions(newOptions: {any})
+                options = newOptions
+                UpdateList()
+            end
+
             return lockControl
         end
  
