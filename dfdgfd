@@ -2254,6 +2254,306 @@ function AstralLib:CreateWindow(titleText, versionText)
 
             return lockControl
         end
+
+        function Elements:AddSkillSelector(config)
+            local title = config.Title
+            local iconId = config.Icon
+            local options = config.Options -- List of skill names
+            local side = config.Side
+            local callback = config.Callback
+            
+            -- Internal state: { [SkillName] = {Enabled = bool, Hold = number} }
+            local skillState = {}
+            for _, opt in ipairs(options) do
+                skillState[opt] = {Enabled = false, Hold = 0.5}
+            end
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 0, 80)
+            frame.BackgroundColor3 = Theme.Card
+            frame.BackgroundTransparency = 0.15
+            frame.Parent = (side == "Right" and currentRightColumn) or currentLeftColumn
+            Corner(10, frame)
+            Stroke(Theme.Border, 1, frame)
+            AddSubtleOutline(frame)
+
+            local ibg = Instance.new("Frame")
+            ibg.Size = UDim2.fromOffset(60, 60)
+            ibg.Position = UDim2.new(0, 12, 0.5, 0)
+            ibg.AnchorPoint = Vector2.new(0, 0.5)
+            ibg.BackgroundColor3 = Theme.IconBg
+            ibg.Parent = frame
+            Corner(8, ibg)
+
+            local icon = Instance.new("ImageLabel")
+            icon.Size = UDim2.fromScale(0.7, 0.7)
+            icon.Position = UDim2.fromScale(0.5, 0.5)
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Image = iconId or SelectorIconID
+            icon.BackgroundTransparency = 1
+            icon.Parent = ibg
+
+            local label = Instance.new("TextLabel")
+            label.Text = title
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 14
+            label.TextColor3 = Theme.TextPrimary
+            label.Position = UDim2.new(0, 82, 0.5, -10)
+            label.AnchorPoint = Vector2.new(0, 0.5)
+            label.Size = UDim2.new(1, -92, 0, 20)
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.BackgroundTransparency = 1
+            label.Parent = frame
+
+            local subLabel = Instance.new("TextLabel")
+            subLabel.Text = "Configure skill durations"
+            subLabel.Font = Enum.Font.GothamMedium
+            subLabel.TextSize = 11
+            subLabel.TextColor3 = Theme.TextSec
+            subLabel.Position = UDim2.new(0, 82, 0.5, 10)
+            subLabel.AnchorPoint = Vector2.new(0, 0.5)
+            subLabel.Size = UDim2.new(1, -92, 0, 20)
+            subLabel.TextXAlignment = Enum.TextXAlignment.Left
+            subLabel.BackgroundTransparency = 1
+            subLabel.Parent = frame
+
+            local ClickIndicator = Instance.new("ImageLabel")
+            ClickIndicator.Size = UDim2.fromOffset(28, 28)
+            ClickIndicator.Position = UDim2.new(1, -20, 0.5, 0)
+            ClickIndicator.AnchorPoint = Vector2.new(1, 0.5)
+            ClickIndicator.BackgroundTransparency = 1
+            ClickIndicator.Image = SelectorIconID
+            ClickIndicator.ImageColor3 = Theme.TextPrimary
+            ClickIndicator.Parent = frame
+
+            local Overlay = Instance.new("TextButton")
+            Overlay.Size = UDim2.fromScale(1, 1)
+            Overlay.BackgroundTransparency = 1
+            Overlay.Text = ""
+            Overlay.Visible = false
+            Overlay.ZIndex = 500
+            Overlay.Parent = MainFrame
+
+            local Panel = Instance.new("Frame")
+            Panel.Size = UDim2.new(0, 260, 1, 0)
+            Panel.Position = UDim2.new(1, 0, 0, 0)
+            Panel.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+            Panel.BorderSizePixel = 0
+            Panel.ZIndex = 501
+            Panel.ClipsDescendants = true
+            Panel.Active = true
+            Panel.Parent = MainFrame
+            Stroke(Theme.Border, 1, Panel)
+
+            local SearchFrame = Instance.new("Frame")
+            SearchFrame.Size = UDim2.new(1, -20, 0, 38)
+            SearchFrame.Position = UDim2.new(0, 10, 0, 10)
+            SearchFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            SearchFrame.ZIndex = 502
+            SearchFrame.Parent = Panel
+            Corner(6, SearchFrame)
+            Stroke(Color3.fromRGB(35, 100, 60), 1, SearchFrame).Transparency = 0.5
+
+            local SearchIcon = Instance.new("ImageLabel")
+            SearchIcon.Size = UDim2.fromOffset(16, 16)
+            SearchIcon.Position = UDim2.new(0, 10, 0.5, 0)
+            SearchIcon.AnchorPoint = Vector2.new(0, 0.5)
+            SearchIcon.Image = "rbxassetid://6031154871"
+            SearchIcon.BackgroundTransparency = 1
+            SearchIcon.ImageColor3 = Theme.TextSec
+            SearchIcon.ZIndex = 503
+            SearchIcon.Parent = SearchFrame
+
+            local SearchBox = Instance.new("TextBox")
+            SearchBox.Size = UDim2.new(1, -40, 1, 0)
+            SearchBox.Position = UDim2.new(0, 35, 0, 0)
+            SearchBox.BackgroundTransparency = 1
+            SearchBox.Text = ""
+            SearchBox.PlaceholderText = "Search options..."
+            SearchBox.TextColor3 = Theme.TextPrimary
+            SearchBox.PlaceholderColor3 = Theme.TextSec
+            SearchBox.Font = Enum.Font.GothamMedium
+            SearchBox.TextSize = 13
+            SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+            SearchBox.ZIndex = 503
+            SearchBox.Parent = SearchFrame
+
+            local PanelTitle = Instance.new("TextLabel")
+            PanelTitle.Size = UDim2.new(1, -20, 0, 30)
+            PanelTitle.Position = UDim2.new(0, 15, 0, 65)
+            PanelTitle.BackgroundTransparency = 1
+            PanelTitle.Text = title
+            PanelTitle.TextColor3 = Theme.TextPrimary
+            PanelTitle.Font = Enum.Font.GothamBold
+            PanelTitle.TextSize = 18
+            PanelTitle.TextXAlignment = Enum.TextXAlignment.Left
+            PanelTitle.ZIndex = 502
+            PanelTitle.Parent = Panel
+
+            local List = Instance.new("ScrollingFrame")
+            List.Size = UDim2.new(1, 0, 1, -110)
+            List.Position = UDim2.new(0, 0, 0, 105)
+            List.BackgroundTransparency = 1
+            List.ScrollBarThickness = 0
+            List.ZIndex = 502
+            List.Parent = Panel
+
+            local ListLayout = Instance.new("UIListLayout")
+            ListLayout.Padding = UDim.new(0, 25)
+            ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            ListLayout.Parent = List
+
+            local function UpdateList()
+                for _, child in ipairs(List:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+                for _, skillName in ipairs(options) do
+                    if SearchBox.Text == "" or string.find(string.lower(skillName), string.lower(SearchBox.Text)) then
+                        local row = Instance.new("Frame")
+                        row.Size = UDim2.new(1, -30, 0, 50)
+                        row.BackgroundTransparency = 1
+                        row.ZIndex = 503
+                        row.Parent = List
+
+                        local nameLabel = Instance.new("TextLabel")
+                        nameLabel.Size = UDim2.new(0, 40, 1, 0)
+                        nameLabel.BackgroundTransparency = 1
+                        nameLabel.Text = skillName
+                        nameLabel.TextColor3 = Theme.TextPrimary
+                        nameLabel.Font = Enum.Font.GothamBold
+                        nameLabel.TextSize = 18
+                        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                        nameLabel.ZIndex = 504
+                        nameLabel.Parent = row
+
+                        -- Toggle Section
+                        local toggleContainer = Instance.new("Frame")
+                        toggleContainer.Size = UDim2.new(0, 60, 1, 0)
+                        toggleContainer.Position = UDim2.new(0, 50, 0, 0)
+                        toggleContainer.BackgroundTransparency = 1
+                        toggleContainer.ZIndex = 504
+                        toggleContainer.Parent = row
+
+                        local toggleBg = Instance.new("TextButton")
+                        toggleBg.Size = UDim2.new(0, 38, 0, 20)
+                        toggleBg.Position = UDim2.new(0.5, 0, 0, 5)
+                        toggleBg.AnchorPoint = Vector2.new(0.5, 0)
+                        toggleBg.BackgroundColor3 = skillState[skillName].Enabled and Color3.fromRGB(60, 60, 65) or Color3.fromRGB(35, 35, 38)
+                        toggleBg.Text = ""
+                        toggleBg.ZIndex = 505
+                        toggleBg.Parent = toggleContainer
+                        Corner(4, toggleBg)
+
+                        local knob = Instance.new("Frame")
+                        knob.Size = UDim2.new(0, 14, 0, 14)
+                        knob.Position = skillState[skillName].Enabled and UDim2.new(1, -17, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+                        knob.AnchorPoint = Vector2.new(0, 0.5)
+                        knob.BackgroundColor3 = skillState[skillName].Enabled and Color3.fromRGB(180, 180, 180) or Color3.fromRGB(100, 100, 105)
+                        knob.ZIndex = 506
+                        knob.Parent = toggleBg
+                        Corner(2, knob)
+
+                        local enabledLabel = Instance.new("TextLabel")
+                        enabledLabel.Size = UDim2.new(1, 0, 0, 15)
+                        enabledLabel.Position = UDim2.new(0, 0, 1, -15)
+                        enabledLabel.BackgroundTransparency = 1
+                        enabledLabel.Text = "Enabled"
+                        enabledLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
+                        enabledLabel.Font = Enum.Font.GothamMedium
+                        enabledLabel.TextSize = 11
+                        enabledLabel.ZIndex = 505
+                        enabledLabel.Parent = toggleContainer
+
+                        toggleBg.MouseButton1Click:Connect(function()
+                            skillState[skillName].Enabled = not skillState[skillName].Enabled
+                            TweenService:Create(knob, TweenInfo.new(0.2), {
+                                Position = skillState[skillName].Enabled and UDim2.new(1, -17, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
+                                BackgroundColor3 = skillState[skillName].Enabled and Color3.fromRGB(180, 180, 180) or Color3.fromRGB(100, 100, 105)
+                            }):Play()
+                            toggleBg.BackgroundColor3 = skillState[skillName].Enabled and Color3.fromRGB(60, 60, 65) or Color3.fromRGB(35, 35, 38)
+                            callback(skillState)
+                        end)
+
+                        -- Hold Section
+                        local holdLabel = Instance.new("TextLabel")
+                        holdLabel.Size = UDim2.new(0, 40, 1, 0)
+                        holdLabel.Position = UDim2.new(1, -85, 0, 0)
+                        holdLabel.BackgroundTransparency = 1
+                        holdLabel.Text = "hold"
+                        holdLabel.TextColor3 = Theme.TextPrimary
+                        holdLabel.Font = Enum.Font.GothamBold
+                        holdLabel.TextSize = 16
+                        holdLabel.TextXAlignment = Enum.TextXAlignment.Right
+                        holdLabel.ZIndex = 504
+                        holdLabel.Parent = row
+
+                        local inputFrame = Instance.new("Frame")
+                        inputFrame.Size = UDim2.new(0, 40, 0, 32)
+                        inputFrame.Position = UDim2.new(1, -40, 0.5, 0)
+                        inputFrame.AnchorPoint = Vector2.new(0, 0.5)
+                        inputFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+                        inputFrame.ZIndex = 504
+                        inputFrame.Parent = row
+                        Corner(6, inputFrame)
+                        Stroke(Color3.fromRGB(45, 45, 48), 1, inputFrame)
+
+                        local box = Instance.new("TextBox")
+                        box.Size = UDim2.fromScale(1, 1)
+                        box.BackgroundTransparency = 1
+                        box.Text = tostring(skillState[skillName].Hold)
+                        box.TextColor3 = Theme.TextPrimary
+                        box.Font = Enum.Font.GothamBold
+                        box.TextSize = 13
+                        box.ZIndex = 505
+                        box.Parent = inputFrame
+
+                        box.FocusLost:Connect(function()
+                            local val = tonumber(box.Text)
+                            if val then
+                                skillState[skillName].Hold = val
+                                callback(skillState)
+                            else
+                                box.Text = tostring(skillState[skillName].Hold)
+                            end
+                        end)
+                    end
+                end
+                task.defer(function() List.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y) end)
+            end
+
+            SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateList)
+
+            local function TogglePanel(state)
+                if state then 
+                    Overlay.Visible = true 
+                    UpdateList() 
+                    TweenService:Create(Panel, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 0, 0)}):Play()
+                else 
+                    TweenService:Create(Panel, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play() 
+                    task.delay(0.3, function() Overlay.Visible = false end) 
+                end
+            end
+
+            local trigger = Instance.new("TextButton")
+            trigger.Size = UDim2.fromScale(1, 1)
+            trigger.BackgroundTransparency = 1
+            trigger.Text = ""
+            trigger.Parent = frame
+
+            local lockControl;
+            trigger.MouseButton1Click:Connect(function() 
+                if lockControl and lockControl:IsLocked() then return end
+                TogglePanel(true) 
+            end)
+            Overlay.MouseButton1Click:Connect(function() TogglePanel(false) end)
+
+            lockControl = ApplyLocking(frame)
+
+            function lockControl:SetState(newState)
+                skillState = newState
+                UpdateList()
+            end
+
+            return lockControl
+        end
  
         function Elements:AddColorPicker(config)
             local title = config.Title
