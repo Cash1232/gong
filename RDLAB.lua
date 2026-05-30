@@ -1,3 +1,4 @@
+local Get = loadstring(game:HttpGet("https://raw.githubusercontent.com/SomeoneScripts/Repo/refs/heads/main/Translations/Translation.lua"))()
 local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -1108,9 +1109,9 @@ end
 
 local function GetStr(val)
 	if type(val) == "function" then
-		return val()
+		return Translator:Get(val())
 	end
-	return val
+	return Translator:Get(val)
 end
 
 local function ConnectSave(Instance, func)
@@ -1307,13 +1308,13 @@ local function ButtonFrame(Instance, Title, Description, HolderSize)
 	local Label = {}
 	function Label:SetTitle(NewTitle)
 		if type(NewTitle) == "string" and NewTitle:gsub(" ", ""):len() > 0 then
-			TitleL.Text = NewTitle
+			TitleL.Text = Get(NewTitle)
 		end
 	end
 	function Label:SetDesc(NewDesc)
 		if type(NewDesc) == "string" and NewDesc:gsub(" ", ""):len() > 0 then
 			DescL.Visible = true
-			DescL.Text = NewDesc
+			DescL.Text = Get(NewDesc)
 			LabelHolder.Position = UDim2.new(0, 10, 0)
 			LabelHolder.AnchorPoint = Vector2.new(0, 0)
 		else
@@ -1401,8 +1402,8 @@ function redzlib:SetScale(NewScale)
 end
 
 function redzlib:MakeWindow(Configs)
-	local WTitle = Configs[1] or Configs.Name or Configs.Title or "redz Library V5"
-	local WMiniText = Configs[2] or Configs.SubTitle or "by : redz9999"
+	local WTitle = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "redz Library V5")
+	local WMiniText = Translator:Get(Configs[2] or Configs.SubTitle or "by : redz9999")
 	
 	Settings.ScriptFile = Configs[3] or Configs.SaveFolder or false
 	
@@ -1656,8 +1657,8 @@ function redzlib:MakeWindow(Configs)
 			Window:MinimizeBtn()
 		end
 		
-		local DTitle = Configs[1] or Configs.Title or "Dialog"
-		local DText = Configs[2] or Configs.Text or "This is a Dialog"
+		local DTitle = Translator:Get(Configs[1] or Configs.Title or "Dialog")
+		local DText = Translator:Get(Configs[2] or Configs.Text or "This is a Dialog")
 		local DOptions = Configs[3] or Configs.Options or {}
 		
 		local Frame = Create("Frame", {
@@ -1722,7 +1723,7 @@ function redzlib:MakeWindow(Configs)
 		
 		local ButtonCount, Dialog = 1, {}
 		function Dialog:Button(Configs)
-			local Name = Configs[1] or Configs.Name or Configs.Title or ""
+			local Name = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "")
 			local Callback = Configs[2] or Configs.Callback or function()end
 			
 			ButtonCount = ButtonCount + 1
@@ -1769,7 +1770,7 @@ function redzlib:MakeWindow(Configs)
 	local ContainerList = {}
 	function Window:MakeTab(paste, Configs)
 		if type(paste) == "table" then Configs = paste end
-		local TName = Configs[1] or Configs.Title or "Tab!"
+		local TName = Translator:Get(Configs[1] or Configs.Title or "Tab!")
 		local TIcon = Configs[2] or Configs.Icon or ""
 		
 		TIcon = redzlib:GetIcon(TIcon)
@@ -1886,7 +1887,7 @@ function redzlib:MakeWindow(Configs)
 		function Tab:Destroy() TabSelect:Destroy() Container:Destroy() end
 		
 		function Tab:AddSection(Configs)
-			local SectionName = type(Configs) == "string" and Configs or Configs[1] or Configs.Name or Configs.Title or Configs.Section
+			local SectionName = Translator:Get(type(Configs) == "string" and Configs or Configs[1] or Configs.Name or Configs.Title or Configs.Section)
 			
 			local SectionFrame = Create("Frame", Container, {
 				Size = UDim2.new(1, 0, 0, 20),
@@ -1923,8 +1924,8 @@ function redzlib:MakeWindow(Configs)
 			return Section
 		end
 		function Tab:AddParagraph(Configs)
-			local PName = Configs[1] or Configs.Title or "Paragraph"
-			local PDesc = Configs[2] or Configs.Text or ""
+			local PName = Translator:Get(Configs[1] or Configs.Title or "Paragraph")
+			local PDesc = Translator:Get(Configs[2] or Configs.Text or "")
 			
 			local Frame, LabelFunc = ButtonFrame(Container, PName, PDesc, UDim2.new(1, -20))
 			
@@ -1948,8 +1949,8 @@ function redzlib:MakeWindow(Configs)
 			return Paragraph
 		end
 		function Tab:AddButton(Configs)
-			local BName = Configs[1] or Configs.Name or Configs.Title or "Button!"
-			local BDescription = Configs.Desc or Configs.Description or ""
+			local BName = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Button!")
+			local BDescription = Translator:Get(Configs.Desc or Configs.Description or "")
 			local Callback = Funcs:GetCallback(Configs, 2)
 			
 			local FButton, LabelFunc = ButtonFrame(Container, BName, BDescription, UDim2.new(1, -20))
@@ -1983,8 +1984,8 @@ function redzlib:MakeWindow(Configs)
 			return Button
 		end
 		function Tab:AddToggle(Configs)
-			local TName = Configs[1] or Configs.Name or Configs.Title or "Toggle"
-			local TDesc = Configs.Desc or Configs.Description or ""
+			local TName = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Toggle")
+			local TDesc = Translator:Get(Configs.Desc or Configs.Description or "")
 			local Callback = Funcs:GetCallback(Configs, 3)
 			local Flag = Configs[4] or Configs.Flag or false
 			local Default = Configs[2] or Configs.Default or false
@@ -2058,8 +2059,8 @@ function redzlib:MakeWindow(Configs)
 			return Toggle
 		end
 		function Tab:AddDropdown(Configs)
-			local DName = Configs[1] or Configs.Name or Configs.Title or "Dropdown"
-			local DDesc = Configs.Desc or Configs.Description or ""
+			local DName = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Dropdown")
+			local DDesc = Translator:Get(Configs.Desc or Configs.Description or "")
 			local DOptions = Configs[2] or Configs.Options or {}
 			local OpDefault = Configs[3] or Configs.Default or {}
 			local Flag = Configs[5] or Configs.Flag or false
@@ -2402,8 +2403,8 @@ function redzlib:MakeWindow(Configs)
 			return Dropdown
 		end
 		function Tab:AddSlider(Configs)
-			local SName = Configs[1] or Configs.Name or Configs.Title or "Slider!"
-			local SDesc = Configs.Desc or Configs.Description or ""
+			local SName = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Slider!")
+			local SDesc = Translator:Get(Configs.Desc or Configs.Description or "")
 			local Min = Configs[2] or Configs.MinValue or Configs.Min or 10
 			local Max = Configs[3] or Configs.MaxValue or Configs.Max or 100
 			local Increase = Configs[4] or Configs.Increase or 1
@@ -2536,10 +2537,10 @@ function redzlib:MakeWindow(Configs)
 			return Slider
 		end
 		function Tab:AddTextBox(Configs)
-			local TName = Configs[1] or Configs.Name or Configs.Title or "Text Box"
-			local TDesc = Configs.Desc or Configs.Description or ""
+			local TName = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Text Box")
+			local TDesc = Translator:Get(Configs.Desc or Configs.Description or "")
 			local TDefault = Configs[2] or Configs.Default or ""
-			local TPlaceholderText = Configs[5] or Configs.PlaceholderText or "Input"
+			local TPlaceholderText = Translator:Get(Configs[5] or Configs.PlaceholderText or "Input")
 			local TClearText = Configs[3] or Configs.ClearText or false
 			local Callback = Funcs:GetCallback(Configs, 4)
 			
@@ -2602,8 +2603,8 @@ function redzlib:MakeWindow(Configs)
 			return TextBox
 		end
 		function Tab:AddDiscordInvite(Configs)
-			local Title = Configs[1] or Configs.Name or Configs.Title or "Discord"
-			local Desc = Configs.Desc or Configs.Description or ""
+			local Title = Translator:Get(Configs[1] or Configs.Name or Configs.Title or "Discord")
+			local Desc = Translator:Get(Configs.Desc or Configs.Description or "")
 			local Logo = Configs[2] or Configs.Logo or ""
 			local Invite = Configs[3] or Configs.Invite or ""
 			
